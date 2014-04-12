@@ -1,7 +1,6 @@
 Player = {}
-Player.Gold.old = 0
-Player.Gold.new = 0
-Player.Gold.lastupdate = 0
+Player.GoldOld = 0
+Player.GoldUpdate = 0
 
 function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 	if not self then
@@ -18,18 +17,20 @@ end
 
 function CDGSL_OnUpdate()
 	local currentGold = GetCurrentMoney()
-	if Player.Gold.old ~= currentGold then
-		if Player.gold.lastupdate - os.time() > 1 then
-			d(string.format("%d Gold",  currentGold - Player.Gold.old))
-			Player.gold.lastupdate = os.time()
+	local currentTime = GetTimeStamp()
+	if Player.GoldOld ~= currentGold then
+		local timeDiff = GetDiffBetweenTimeStamps(currentTime, Player.GoldUpdate)		
+		if timeDiff > 1 then
+			d(string.format("%d Gold",  currentGold - Player.GoldOld))
+			Player.GoldUpdate = currentTime
+			Player.GoldOld = currentGold
 		end
 	end
 end
 
 function CDGSL_OnInitialized()
-	Player.Gold.old = GetCurrentMoney()
-	Player.Gold.new = Player.Gold.old
-	Player.Gold.lastupdate = os.time()
+	Player.GoldOld = GetCurrentMoney()
+	Player.GoldUpdate = GetTimeStamp()
 
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_MONEY_UPDATE, CDGSL_MoneyUpdate)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_LOOT_RECEIVED, CDGSL_LootReceived)
