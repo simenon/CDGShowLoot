@@ -1,0 +1,5 @@
+## Title: CDGShowLoot
+## APIVersion: 100003
+
+CDGShowLoot.lua
+CDGShowLoot.xml
