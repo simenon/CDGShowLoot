@@ -3,13 +3,84 @@ Player.GoldOld = 0
 Player.GoldUpdate = 0
 Player.Active = true
 
+Player.LastLootName = ""
+Player.LastLootType = 0
+Player.LastLootAction = ""
+
+INTERACT_TARGET_TYPE = {
+	[INTERACT_TARGET_TYPE_AOE_LOOT]   = "AOE Loot",
+	[INTERACT_TARGET_TYPE_FIXTURE]    = "fixture",
+	[INTERACT_TARGET_TYPE_ITEM]       = "Item",
+	[INTERACT_TARGET_TYPE_NONE]       = "None",
+	[INTERACT_TARGET_TYPE_OBJECT]     = "Object",
+	[INTERACT_TARGET_TYPE_QUEST_ITEM] = "Quest item"
+}
+
+function CDGSL_GameCameraUIModeChange()
+	Player.LastLootName, Player.LastLootType, Player.LastLootAction = GetLootTargetInfo()
+	Player.LastLootName = string.gsub(Player.LastLootName,"%^%a","")
+end
+
+function CDGSL_LootClosed()
+	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
+end
+
+function CDGSL_ChatterBegin()
+	CDGSL_LootClosed()
+end
+
+function CDGSL_ReticleHiddenUpdate(_, hidden)
+	if hidden then CDGSL_GameCameraUIModeChange() end
+end
+
 function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 	if not self then
 		return
 	end
 
-	itemName = string.gsub(itemName,"%^[pn]","")
-	d(string.format("%d %s",quantity,itemName ))
+	itemName = string.gsub(itemName,"%^%a","")	
+	
+	if Player.LastLootAction == "" then
+		if quantity > 1 then
+			d(string.format("Looted %d %s",quantity,itemName))
+		else
+			d(string.format("Looted %s",itemName))
+		end 
+	elseif Player.LastLootAction == "Search" and
+	       ( Player.LastLootType == INTERACT_TARGET_TYPE_FIXTURE or
+		     Player.LastLootType == INTERACT_TARGET_TYPE_OBJECT ) then
+		if quantity > 1 then
+			d(string.format("Searched %s and found %d %s",string.lower(Player.LastLootName), quantity, itemName))
+		else
+			d(string.format("Searched %s and found %s ",string.lower(Player.LastLootName), itemName))
+		end		
+	elseif Player.LastLootAction == "Take" and
+		   ( Player.LastLootType == INTERACT_TARGET_TYPE_FIXTURE or 
+		     Player.LastLootType == INTERACT_TARGET_TYPE_OBJECT )then
+		 if quantity > 1 then
+			d(string.format("Took %d %s", quantity, itemName))
+		else
+			d(string.format("Took %s", itemName))
+		end	
+	elseif Player.LastLootAction == "Examine" and
+		   Player.LastLootType == INTERACT_TARGET_TYPE_OBJECT then
+		local text = "Examined " .. Player.LastLootName .. " and found"
+		if quantity > 1 then text = text .. " " .. quantity end
+		d(text .. " " .. itemName)
+	elseif ( Player.LastLootAction == "Collect" or
+	         Player.LastLootAction == "Mine" or
+		     Player.LastLootAction == "Cut" ) and
+		   Player.LastLootType == INTERACT_TARGET_TYPE_OBJECT then
+		local text = "Collected"
+		if quantity > 1 then text = text .. " " .. quantity end
+		d(text .. " " .. itemName .. " from " .. Player.LastLootName)  
+	elseif Player.LastLootAction == "Use" and
+		   Player.LastLootType == INTERACT_TARGET_TYPE_OBJECT then
+		local text = "Used " .. Player.LastLootName .. " and found "
+		if quantity > 1 then text = text .. " " .. quantity end
+	else 
+		d(string.format("CDGShowLoot undefined, please report @ esoui - %d %s from %s type %s action %s",quantity,itemName, Player.LastLootName, INTERACT_TARGET_TYPE[Player.LastLootType], Player.LastLootAction ))
+	end
 end
 
 function CDGSL_MoneyUpdate(_, newMoney, oldMoney, _)
@@ -42,6 +113,11 @@ end
 function CDGSL_OnInitialized()
 	Player.GoldOld = GetCurrentMoney()
 	Player.GoldUpdate = GetTimeStamp()
+	
+	--EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_GAME_CAMERA_UI_MODE_CHANGED, CDGSL_GameCameraUIModeChange)
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_RETICLE_HIDDEN_UPDATE, CDGSL_ReticleHiddenUpdate)
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_LOOT_CLOSED, CDGSL_LootClosed)	
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CHATTER_BEGIN, CDGSL_ChatterBegin)
 	
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_PLAYER_DEACTIVATED, CDGSL_PlayerDeactivated)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_PLAYER_ACTIVATED, CDGSL_PlayerActivated)
