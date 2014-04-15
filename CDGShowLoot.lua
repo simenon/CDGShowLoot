@@ -72,14 +72,14 @@ function CDGSL_LootClosed()
 		end) 
 		local msg = "Looted"
 		while not List.empty(Player.LootList) do
-			local q,v = List.pop(Player.LootList)
+			local l = List.pop(Player.LootList)
 			while not List.empty(Player.LootList) do
-				local q_peek,v_peek = List.peek(Player.LootList)
-				if v_peek == v then
-					q = q + q_peek
+				local l_peek = List.peek(Player.LootList)
+				if l_peek[1] == l[1] then
+					l[1] = l[1] + l_peek[1]
 					_ ,_ = List.pop(Player.LootList)
 				else
-					msg = msg .. " " .. q .. " " .. v
+					msg = msg .. " " .. l[1] .. " " .. l[2]
 					break
 				end
 			end
