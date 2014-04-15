@@ -7,6 +7,8 @@ Player.LastLootName = ""
 Player.LastLootType = 0
 Player.LastLootAction = ""
 
+Player.LootList = {}
+
 INTERACT_TARGET_TYPE = {
 	[INTERACT_TARGET_TYPE_AOE_LOOT]   = "AOE Loot",
 	[INTERACT_TARGET_TYPE_FIXTURE]    = "fixture",
@@ -16,6 +18,29 @@ INTERACT_TARGET_TYPE = {
 	[INTERACT_TARGET_TYPE_QUEST_ITEM] = "Quest item"
 }
 
+function List.new ()
+	return {first = 0, last = -1}
+end
+
+function List.push (list, value)
+	list.last = list.last + 1
+	list[list.last] = value
+end
+
+function List.pop (list, value)
+	if list.first > list.last then 
+		return nil 
+	end
+	local value = list[first]
+	list[list.first] = nil
+	list.first = list.first + 1
+	return value
+end
+
+function List.empty(list)
+	return	list.first > list.last
+end
+
 function CDGSL_GameCameraUIModeChange()
 	Player.LastLootName, Player.LastLootType, Player.LastLootAction = GetLootTargetInfo()
 	Player.LastLootName = string.gsub(Player.LastLootName,"%^%a","")
@@ -23,6 +48,9 @@ end
 
 function CDGSL_LootClosed()
 	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
+	while not List.empty(Player.LootList) do
+		d("List : "..List.pop(Player.LootList))
+	end
 end
 
 function CDGSL_ChatterBegin()
@@ -38,7 +66,9 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 		return
 	end
 
-	itemName = string.gsub(itemName,"%^%a","")	
+	itemName = string.gsub(itemName,"%^%a","")
+
+	Player.LootList.push(Player.LootList, itemName)
 	
 	if Player.LastLootAction == "" then
 		if quantity > 1 then
@@ -113,6 +143,8 @@ end
 function CDGSL_OnInitialized()
 	Player.GoldOld = GetCurrentMoney()
 	Player.GoldUpdate = GetTimeStamp()
+
+  Player.LootList = List.new()
 	
 	--EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_GAME_CAMERA_UI_MODE_CHANGED, CDGSL_GameCameraUIModeChange)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_RETICLE_HIDDEN_UPDATE, CDGSL_ReticleHiddenUpdate)
