@@ -43,7 +43,7 @@ function List.peek(list)
 	if list.first > list.last then 
 		return nil 
 	end
-	return list.first
+	return list[list.first]
 end
 
 function List.empty(list)
