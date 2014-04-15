@@ -50,8 +50,14 @@ end
 
 function CDGSL_LootClosed()
 	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
-	while not List.empty(Player.LootList) do
-		d("List : "..List.pop(Player.LootList))
+	if not List.empty(Player.LootList) then
+		local msg = "Looted"
+		while not List.empty(Player.LootList) do
+		  msg = msg .. " " .. List.pop(Player.LootList)
+			if not List.empty(Player.LootList) then
+				msg = msg .. ","
+		end
+		d(msg .. " from " .. Player.LastLootName .. ".")
 	end
 end
 
