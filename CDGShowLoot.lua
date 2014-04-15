@@ -61,7 +61,15 @@ end
 
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
-		table.sort(Player.LootList)
+		table.sort(Player.LootList, function (a,b) 
+			if a[1] < b[1] then
+				return true
+			elseif a[1] > b[1] then
+				return false
+			else
+			  return a[1] < b[1]
+			end
+		end) 
 		local msg = "Looted"
 		while not List.empty(Player.LootList) do
 			local q,v = List.pop(Player.LootList)
