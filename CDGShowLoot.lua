@@ -49,7 +49,6 @@ function CDGSL_GameCameraUIModeChange()
 end
 
 function CDGSL_LootClosed()
-	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
 	if not List.empty(Player.LootList) then
 		local msg = "Looted"
 		while not List.empty(Player.LootList) do
@@ -60,6 +59,7 @@ function CDGSL_LootClosed()
 		end
 		d(msg .. " from " .. Player.LastLootName .. ".")
 	end
+	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
 end
 
 function CDGSL_ChatterBegin()
@@ -123,7 +123,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 end
 
 function CDGSL_MoneyUpdate(_, newMoney, oldMoney, _)
-
+	List.push(Player.LootList, ((oldMoney - newMoney) .. " gold"))
 end
 
 function CDGSL_PlayerDeactivated()
