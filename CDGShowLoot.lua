@@ -7,7 +7,7 @@ Player.LastLootName = ""
 Player.LastLootType = 0
 Player.LastLootAction = ""
 
-LootList = {}
+Player.LootList = {}
 
 INTERACT_TARGET_TYPE = {
 	[INTERACT_TARGET_TYPE_AOE_LOOT]   = "AOE Loot",
@@ -33,7 +33,7 @@ function List.pop(list, value)
 	if list.first > list.last then 
 		return nil 
 	end
-	local value = list[first]
+	local value = list[list.first]
 	list[list.first] = nil
 	list.first = list.first + 1
 	return value
@@ -50,8 +50,8 @@ end
 
 function CDGSL_LootClosed()
 	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
-	while not List.empty(LootList) do
-		d("List : "..List.pop(LootList))
+	while not List.empty(Player.LootList) do
+		d("List : "..List.pop(Player.LootList))
 	end
 end
 
@@ -70,7 +70,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 
 	itemName = string.gsub(itemName,"%^%a","")
 
-	List.push(LootList, itemName)
+	List.push(Player.LootList, itemName)
 	
 	if Player.LastLootAction == "" then
 		if quantity > 1 then
@@ -146,7 +146,7 @@ function CDGSL_OnInitialized()
 	Player.GoldOld = GetCurrentMoney()
 	Player.GoldUpdate = GetTimeStamp()
 
-  LootList = List.new()
+  Player.LootList = List.new()
 	
 	--EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_GAME_CAMERA_UI_MODE_CHANGED, CDGSL_GameCameraUIModeChange)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_RETICLE_HIDDEN_UPDATE, CDGSL_ReticleHiddenUpdate)
