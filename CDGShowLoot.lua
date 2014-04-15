@@ -76,7 +76,7 @@ function CDGSL_LootClosed()
 			local l = List.pop(Player.LootList)
 			while not List.empty(Player.LootList) do
 				local l_peek = List.peek(Player.LootList)
-				if l_peek[1] == l[1] then
+				if l_peek[2] == l[2] then
 					l[1] = l[1] + l_peek[1]
 					_ ,_ = List.pop(Player.LootList)
 				else
