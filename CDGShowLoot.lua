@@ -87,8 +87,12 @@ function CDGSL_LootClosed()
 	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
 end
 
-function CDGSL_ChatterBegin()
+function CDGSL_ChatterEnd()
 	CDGSL_LootClosed()
+end
+
+function CDGSL_ChatterBegin()
+--	CDGSL_LootClosed()
 end
 
 function CDGSL_ReticleHiddenUpdate(_, hidden)
@@ -184,6 +188,7 @@ function CDGSL_OnInitialized()
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_RETICLE_HIDDEN_UPDATE, CDGSL_ReticleHiddenUpdate)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_LOOT_CLOSED, CDGSL_LootClosed)	
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CHATTER_BEGIN, CDGSL_ChatterBegin)
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CHATTER_END, CDGSL_ChatterEnd)
 	
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_PLAYER_DEACTIVATED, CDGSL_PlayerDeactivated)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_PLAYER_ACTIVATED, CDGSL_PlayerActivated)
