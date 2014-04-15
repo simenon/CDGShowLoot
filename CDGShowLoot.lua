@@ -70,7 +70,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 
 	itemName = string.gsub(itemName,"%^%a","")
 
-	Player.LootList.push(Player.LootList, itemName)
+	List.push(Player.LootList, itemName)
 	
 	if Player.LastLootAction == "" then
 		if quantity > 1 then
