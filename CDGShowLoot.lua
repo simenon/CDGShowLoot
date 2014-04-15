@@ -1,5 +1,7 @@
 Player = {}
 
+Player.isCrafting = false
+
 Player.LastLootName = ""
 Player.LastLootType = 0
 Player.LastLootAction = ""
@@ -52,7 +54,7 @@ function CDGSL_LootClosed()
 
 		table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
 
-		local msg = "Looted"
+		local msg = ""
 
 		while not List.empty(Player.LootList) do
 			local l = List.pop(Player.LootList)
@@ -110,17 +112,32 @@ function CDGSL_OnUpdate()
 end
 
 function CDGSL_CraftCompleted()
+	Player.LastLootName, Player.LastLootType, Player.LastLootAction = GetLootTargetInfo()
 	local items = GetNumLastCraftingResultItems()
-  for i = 1, items do
-		itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo()
-		List.push(Player.LootList, {qty = quantity, val = itemName})
+	local _, bagslots = GetBagInfo(BAG_BACKPACK)
+	for i=1, items do
+		itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo(i)
+		for b=1, bagslots do
+			local bagItemName = GetItemName(BAG_BACKPACK, b) 
+		
+			if (bagItemName == itemName) then 
+		
+				local itemLink = GetItemLink(BAG_BACKPACK, b, LINK_STYLE_DEFAULT) 
+				itemLink = string.gsub(itemLink,"%^%a+","")
+				List.push(Player.LootList, {qty = quantity, val = itemLink})
+				break
+			
+			end
+		end		
 	end
-  CDGSL_LootClosed()
+    CDGSL_LootClosed()
 end
+
 
 function CDGSL_OnInitialized()
 
   Player.LootList = List.new()
+
 
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CRAFT_COMPLETED, CDGSL_CraftCompleted)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_RETICLE_HIDDEN_UPDATE, CDGSL_ReticleHiddenUpdate)
