@@ -18,16 +18,18 @@ INTERACT_TARGET_TYPE = {
 	[INTERACT_TARGET_TYPE_QUEST_ITEM] = "Quest item"
 }
 
-function List.new ()
+List = {}
+
+function List.new()
 	return {first = 0, last = -1}
 end
 
-function List.push (list, value)
+function List.push(list, value)
 	list.last = list.last + 1
 	list[list.last] = value
 end
 
-function List.pop (list, value)
+function List.pop(list, value)
 	if list.first > list.last then 
 		return nil 
 	end
