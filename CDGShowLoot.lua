@@ -47,7 +47,11 @@ function List.peek(list)
 end
 
 function List.empty(list)
-	return	list.first > list.last
+	if list.first > list.last then
+		return true
+	else
+		return false
+	end
 end
 
 function CDGSL_GameCameraUIModeChange()
