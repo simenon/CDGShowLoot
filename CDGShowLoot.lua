@@ -63,12 +63,12 @@ function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
 
 		table.sort(Player.LootList, function (a,b) 
-			if a[1] < b[1] then
+			if a[2] < b[2] then
 				return true
-			elseif a[1] > b[1] then
+			elseif a[2] > b[2] then
 				return false
 			else
-			  return a[1] < b[1]
+			  return a[2] < b[2]
 			end
 		end) 
 
@@ -156,7 +156,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 end
 
 function CDGSL_MoneyUpdate(_, newMoney, oldMoney, _)
-	List.push(Player.LootList, {(oldMoney - newMoney), "gold"})
+	List.push(Player.LootList, {(newMoney - oldMoney), "gold"})
 end
 
 function CDGSL_PlayerDeactivated()
