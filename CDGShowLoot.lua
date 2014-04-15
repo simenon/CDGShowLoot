@@ -29,7 +29,7 @@ function List.push(list, value)
 	list[list.last] = value
 end
 
-function List.pop(list, value)
+function List.pop(list)
 	if list.first > list.last then 
 		return nil 
 	end
