@@ -39,6 +39,13 @@ function List.pop(list)
 	return value
 end
 
+function List.peek(list)
+	if list.first > list.last then 
+		return nil 
+	end
+	return list.first
+end
+
 function List.empty(list)
 	return	list.first > list.last
 end
@@ -50,11 +57,22 @@ end
 
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
+		table.sort(Player.LootList)
 		local msg = "Looted"
 		while not List.empty(Player.LootList) do
-		  msg = msg .. " " .. List.pop(Player.LootList)
-			if not List.empty(Player.LootList) then	
-				msg = msg .. "," 
+			local q,v = List.pop(Player.LootList)
+			while not List.empty(Player.LootList) do
+				local q_peek,v_peek = List.peek(Player.LootList)
+				if v_peek == v then
+					q = q + q_peek
+					_ ,_ = List.pop(Player.LootList)
+				else
+					msg = msg .. " " .. q .. " " .. v
+					break
+				end
+			end
+			if not List.empty(Player.LootList) do
+				msg = msg .. ","
 			end
 		end
 		d(msg .. " from " .. Player.LastLootName .. ".")
@@ -77,7 +95,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 
 	itemName = string.gsub(itemName,"%^%a","")
 
-	List.push(Player.LootList, itemName)
+	List.push(Player.LootList, {quantity,itemName})
 	
 	if Player.LastLootAction == "" then
 		if quantity > 1 then
@@ -123,7 +141,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 end
 
 function CDGSL_MoneyUpdate(_, newMoney, oldMoney, _)
-	List.push(Player.LootList, ((oldMoney - newMoney) .. " gold"))
+	List.push(Player.LootList, {(oldMoney - newMoney), "gold"})
 end
 
 function CDGSL_PlayerDeactivated()
