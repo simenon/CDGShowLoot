@@ -61,6 +61,7 @@ end
 
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
+
 		table.sort(Player.LootList, function (a,b) 
 			if a[1] < b[1] then
 				return true
@@ -70,7 +71,9 @@ function CDGSL_LootClosed()
 			  return a[1] < b[1]
 			end
 		end) 
+
 		local msg = "Looted"
+
 		while not List.empty(Player.LootList) do
 			local l = List.pop(Player.LootList)
 			while not List.empty(Player.LootList) do
@@ -79,10 +82,10 @@ function CDGSL_LootClosed()
 					l[1] = l[1] + l_peek[1]
 					_ ,_ = List.pop(Player.LootList)
 				else
-					msg = msg .. " " .. l[1] .. " " .. l[2]
 					break
 				end
 			end
+			msg = msg .. " " .. l[1] .. " " .. l[2]
 			if not List.empty(Player.LootList) then
 				msg = msg .. ","
 			end
