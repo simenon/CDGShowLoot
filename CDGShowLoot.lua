@@ -9,14 +9,14 @@ Player.LastLootAction = ""
 
 Player.LootList = {}
 
-INTERACT_TARGET_TYPE = {
-	[INTERACT_TARGET_TYPE_AOE_LOOT]   = "AOE Loot",
-	[INTERACT_TARGET_TYPE_FIXTURE]    = "fixture",
-	[INTERACT_TARGET_TYPE_ITEM]       = "Item",
-	[INTERACT_TARGET_TYPE_NONE]       = "None",
-	[INTERACT_TARGET_TYPE_OBJECT]     = "Object",
-	[INTERACT_TARGET_TYPE_QUEST_ITEM] = "Quest item"
-}
+--INTERACT_TARGET_TYPE = {
+--	[INTERACT_TARGET_TYPE_AOE_LOOT]   = "AOE Loot",
+--	[INTERACT_TARGET_TYPE_FIXTURE]    = "fixture",
+--	[INTERACT_TARGET_TYPE_ITEM]       = "Item",
+--	[INTERACT_TARGET_TYPE_NONE]       = "None",
+--	[INTERACT_TARGET_TYPE_OBJECT]     = "Object",
+--	[INTERACT_TARGET_TYPE_QUEST_ITEM] = "Quest item"
+--}
 
 List = {}
 
@@ -62,7 +62,7 @@ end
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
 
-		table.sort(Player.LootList, function (a,b) return (a[2] < b[2]) end) 
+		table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
 
 		local msg = "Looted"
 
@@ -70,14 +70,14 @@ function CDGSL_LootClosed()
 			local l = List.pop(Player.LootList)
 			while not List.empty(Player.LootList) do
 				local l_peek = List.peek(Player.LootList)
-				if l_peek[2] == l[2] then
-					l[1] = l[1] + l_peek[1]
+				if l_peek.val == l.val then
+					l.qty = l.qty + l_peek.qty
 					_ ,_ = List.pop(Player.LootList)
 				else
 					break
 				end
 			end
-			msg = msg .. " " .. l[1] .. " " .. l[2]
+			msg = msg .. " " .. l.qty .. " " .. l.val
 			if not List.empty(Player.LootList) then
 				msg = msg .. ","
 			end
@@ -102,7 +102,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 
 	itemName = string.gsub(itemName,"%^%a","")
 
-	List.push(Player.LootList, {quantity,itemName})
+	List.push(Player.LootList, {qty = quantity, val = itemName})
 	
 --	if Player.LastLootAction == "" then
 --		if quantity > 1 then
@@ -148,7 +148,7 @@ function CDGSL_LootReceived(_, _, itemName, quantity, _, _, self)
 end
 
 function CDGSL_MoneyUpdate(_, newMoney, oldMoney, _)
-	List.push(Player.LootList, {(newMoney - oldMoney), "gold"})
+	List.push(Player.LootList, {qty = (newMoney - oldMoney), val = "gold"})
 end
 
 function CDGSL_PlayerDeactivated()
