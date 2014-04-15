@@ -71,7 +71,7 @@ function CDGSL_LootClosed()
 					break
 				end
 			end
-			if not List.empty(Player.LootList) do
+			if not List.empty(Player.LootList) then
 				msg = msg .. ","
 			end
 		end
