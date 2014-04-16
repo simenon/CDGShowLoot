@@ -44,6 +44,10 @@ function List.empty(list)
 	end
 end
 
+function List.elements(list)
+	return list.last
+end
+
 function CDGSL_GameCameraUIModeChange()
 	Player.LastLootName, Player.LastLootType, Player.LastLootAction = GetLootTargetInfo()
 	Player.LastLootName = string.gsub(Player.LastLootName,"%^%a","")
@@ -52,7 +56,9 @@ end
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
 
-		table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
+	  if List.elements() > 1 then	
+			table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
+		end
 
 		local msg = ""
 
