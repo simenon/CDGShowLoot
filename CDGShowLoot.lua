@@ -56,7 +56,7 @@ end
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
 
-	  if List.elements() > 1 then	
+	  if List.elements(Player.LootList) > 1 then	
 			table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
 		end
 
