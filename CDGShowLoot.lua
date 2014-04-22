@@ -1,17 +1,18 @@
 Player = {}
 
 Player.isCrafting = false
+Player.LastLootName = nil
+Player.LootList = nil
 
-Player.LastLootName = ""
-Player.LastLootType = 0
-Player.LastLootAction = ""
-
-Player.LootList = {}
+Color = {
+	Green3 = "|c00CD00",
+	Red3 = "|CD00000"
+}
 
 List = {}
 
 function List.new()
-	return {first = 0, last = -1}
+	return {first = 1, last = 0}
 end
 
 function List.push(list, value)
@@ -49,16 +50,16 @@ function List.elements(list)
 end
 
 function CDGSL_GameCameraUIModeChange()
-	Player.LastLootName, Player.LastLootType, Player.LastLootAction = GetLootTargetInfo()
-	Player.LastLootName = string.gsub(Player.LastLootName,"%^%a","")
+	if not Player.isCrafting then
+		Player.LastLootName, _, _ = GetLootTargetInfo()
+		Player.LastLootName = string.gsub(Player.LastLootName,"%^%a","")
+	end
 end
 
 function CDGSL_LootClosed()
 	if not List.empty(Player.LootList) then
 
-	  if List.elements(Player.LootList) > 1 then	
-			table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
-		end
+		table.sort(Player.LootList, function (a,b) return (a.val < b.val) end) 
 
 		local msg = ""
 
@@ -72,23 +73,41 @@ function CDGSL_LootClosed()
 				else
 					break
 				end
+			end				
+				
+			if l.qty >= 0 then
+				msg = msg .. " " .. Color.Green3 .. l.qty .. "|r" .. " " .. l.val
+			else
+				msg = msg .. " " .. Color.Red3 .. math.abs(l.qty) .. "|r" .. " " .. l.val
 			end
-			msg = msg .. " " .. l.qty .. " " .. l.val
+			
+			
 			if not List.empty(Player.LootList) then
 				msg = msg .. ","
 			end
 		end
-		d(msg .. " from " .. Player.LastLootName .. ".")
+		
+		if Player.LastLootName ~= nil and Player.LastLootName ~= "" then
+			--
+			-- When you targeted a bookshelf and then go to a crafting station 
+			-- it will remain stuck on bookshelf for some odd reason, so override 
+			-- in that case
+			--
+			if Player.isCrafting and Player.LastLootName == "Bookshelf" then
+				Player.LastLootName = "crafting station"
+			end
+			msg = msg .. " from " .. Player.LastLootName .. "."
+		end
+		d(msg)
 	end
-	Player.LastLootName, Player.LastLootType, Player.LastLootAction = "", 0, ""
+	Player.LastLootName = nil
+	Player.LootList = List.new()
 end
 
 function CDGSL_ChatterEnd()
 	CDGSL_LootClosed()
 end
 
-function CDGSL_ChatterBegin()
-end
 
 function CDGSL_ReticleHiddenUpdate(_, hidden)
 	if hidden then CDGSL_GameCameraUIModeChange() end
@@ -108,17 +127,16 @@ function CDGSL_MoneyUpdate(_, newMoney, oldMoney, _)
 	List.push(Player.LootList, {qty = (newMoney - oldMoney), val = "gold"})
 end
 
-function CDGSL_PlayerDeactivated()
+function CDGSL_CraftingStationInteract()
+	Player.isCrafting = true	
 end
 
-function CDGSL_PlayerActivated()
-end
-
-function CDGSL_OnUpdate()
+function CDGSL_EndCraftingStationInteract()
+	Player.isCrafting = false
 end
 
 function CDGSL_CraftCompleted()
-	Player.LastLootName, Player.LastLootType, Player.LastLootAction = GetLootTargetInfo()
+	Player.LastLootName, _, _ = GetLootTargetInfo()
 	local items = GetNumLastCraftingResultItems()
 	local _, bagslots = GetBagInfo(BAG_BACKPACK)
 	for i=1, items do
@@ -144,15 +162,12 @@ function CDGSL_OnInitialized()
 
   Player.LootList = List.new()
 
-
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CRAFTING_STATION_INTERACT, CDGSL_CraftingStationInteract)
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_END_CRAFTING_STATION_INTERACT, CDGSL_EndCraftingStationInteract)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CRAFT_COMPLETED, CDGSL_CraftCompleted)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_RETICLE_HIDDEN_UPDATE, CDGSL_ReticleHiddenUpdate)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_LOOT_CLOSED, CDGSL_LootClosed)	
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CHATTER_BEGIN, CDGSL_ChatterBegin)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_CHATTER_END, CDGSL_ChatterEnd)
-	
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_PLAYER_DEACTIVATED, CDGSL_PlayerDeactivated)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_PLAYER_ACTIVATED, CDGSL_PlayerActivated)
 
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_MONEY_UPDATE, CDGSL_MoneyUpdate)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot",EVENT_LOOT_RECEIVED, CDGSL_LootReceived)

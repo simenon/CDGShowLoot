@@ -4,9 +4,6 @@
             <OnInitialized>
                 CDGSL_OnInitialized()
             </OnInitialized>
-						<OnUpdate>
-								CDGSL_OnUpdate()
-						</OnUpdate>
         </TopLevelControl>
     </Controls>
 </GuiXml>
