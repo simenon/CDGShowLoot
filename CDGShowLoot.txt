@@ -1,5 +1,10 @@
-## Title: CDGShowLoot
 ## APIVersion: 100003
+## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066991.7|r
+## Version: 1.7
+## Author: CrazyDutchGuy
+## SavedVariables: CDGShowLoot_SavedVariables, CDGLibGui_SavedVariables
 
+CDGLibGui.lua
 CDGShowLoot.lua
 CDGShowLoot.xml
+
