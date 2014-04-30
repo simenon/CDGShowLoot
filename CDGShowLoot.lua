@@ -1,4 +1,7 @@
+local LAM = LibStub:GetLibrary("LibAddonMenu-1.0")
 local CDGSL = ZO_Object:Subclass()
+
+
 local delayedHide = false
 
 Player = { logging = {} }
@@ -13,27 +16,13 @@ Color = {
 	Red3 = "|CD00000"
 }
 
-savedVars_CDGShowLoot = nil
-savedVars_CDGLibGui = nil
+CDGShowLoot = {
+	defaults = {
+		logToDefaultChat = false
+	}
+}
 
-SLASH_COMMANDS["/cdg"] = function (option)
-
-	CDGLibGui.addMessage(option)
-	if option ~=nil and option ~= "" and option ~= "help" then
-		if option == "lock" then
-			CDGLibGui.setWindowLock(value)
-		elseif string.sub( option,1,8 ) == "fontsize" then
-			local options = { string.match(option,"^(%S*)%s*(.-)$") }
-			
-			CDGLibGui.addMessage("changing fontsize")
-			CDGLibGui.setFontSize(options[2])
-		end
-	else
-		CDGLibGui.addMessage("/CDG Help me !!!")
-		CDGLibGui.addMessage("- /cdg lock  [true,false](To toggle lock the window)")
-		CDGLibGui.addMessage("- /cdg fontsize value (To set size of font)")
-	end
-end
+local savedVars_CDGShowLoot = {}
 
 List = {}
 
@@ -142,7 +131,7 @@ function CDGSL:LootClosed(...)
 				
 				
 			end				
-				
+			
 			if l.qty >= 0 then
 				msg = msg .. " " .. Color.Green3 .. l.qty .. "|r" .. " " .. l.val
 			else
@@ -155,7 +144,7 @@ function CDGSL:LootClosed(...)
 			end
 			
 			if (not List.empty(Player.LootList) and l.who ~= l_peek.who) or List.empty(Player.LootList) then
-				CDGLibGui.addMessage(msg)
+				CDGSL:sendMessage(msg)
 				msg = ""
 			end
 		end	
@@ -163,8 +152,6 @@ function CDGSL:LootClosed(...)
 	if List.empty(Player.LootList) then
 		Player.LastLootName = nil
 		Player.LootList = List.new()
-	else
-		CDGLibGui.addMessage("ERROR LIST NOT EMPTY")
 	end
 end
 
@@ -218,33 +205,62 @@ function CDGSL:CraftCompleted(...)
 	local _, bagslots = GetBagInfo(BAG_BACKPACK)
 	for i=1, items do
 		itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo(i)
-		for b=1, bagslots do
-			local bagItemName = GetItemName(BAG_BACKPACK, b) 
 		
-			if (bagItemName == itemName) then 
-		
-				local itemLink = GetItemLink(BAG_BACKPACK, b, LINK_STYLE_DEFAULT) 
-				itemLink = CDGSL:StripControlCharacters(itemLink)
-				List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
-				break
-			
-			end
-		end		
+		local itemLink = CDGSL:LookUpItemNameInBag(itemName)
+		itemLink = CDGSL:StripControlCharacters(itemLink)
+		List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
+	
 	end
     CDGSL:LootClosed()
 end
 
+function CDGSL:LookUpItemNameInBag(itemName)
+	local _, bagslots = GetBagInfo(BAG_BACKPACK)
+	for b=1, bagslots do
+		local bagItemName = GetItemName(BAG_BACKPACK, b) 
+		if (bagItemName == itemName) then 
+			return GetItemLink(BAG_BACKPACK, b, LINK_STYLE_DEFAULT) 	
+		end		
+	end
+end
+
+function CDGSL:QuestRemoved(isCompleted, ...)
+	if isCompleted then
+		CDGSL:LootClosed()
+	end
+end
+
 function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 	if(addOnName == "CDGShowLoot") then
-		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 1, nil)
+		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 1, nil, CDGShowLoot.defaults)
 		CDGLibGui.initializeSavedVariable()		
 		CDGLibGui.CreateWindow()
-		CDGLibGui.addMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066991.7|r Loaded")
-		CDGLibGui.addMessage("To configure by command use |c006699/cdg help|r")
+		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.1|r Loaded")
     end
 end
 
+function CDGSL:sendMessage(message)
+	if savedVars_CDGShowLoot.logToDefaultChat then
+		d(message)
+	end
+	CDGLibGui.addMessage(message)
+end
+
+function CDGSL:InitializeLAMSettings()
+	local lamID = "CDGShowLootLAM"
+	local panelID = LAM:CreateControlPanel(lamID, "CDG Show Loot")
+	LAM:AddHeader(panelID, lamID.."Header".."GO", "General Options")
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to main chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function(...) return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function(...) return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
+	LAM:AddHeader(panelID, lamID.."Header".."FS", "Font Settings")
+	LAM:AddSlider(panelID, lamID.."Slider", "Font Size", nil, 10, 30, 1, function(...) return CDGLibGui.getFontSize() end, function(...) CDGLibGui.setFontSize(...) end, false, nil)
+	LAM:AddDropdown(panelID, lamID.."Dropdown", "Font Style", nil, CDGLibGui.fontstyles, function(...) return CDGLibGui.getFontStyle() end, function(...) return CDGLibGui.setFontStyle(...) end, false, nil)
+end
+
 function CDGSL_OnInitialized()
+	CDGSL:InitializeLAMSettings()
+
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:AddonLoaded(...) end )
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFTING_STATION_INTERACT, function(...) CDGSL:CraftingStationInteract(...) end)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_END_CRAFTING_STATION_INTERACT, function(...) CDGSL:EndCraftingStationInteract(...) end)
@@ -252,6 +268,7 @@ function CDGSL_OnInitialized()
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_RETICLE_HIDDEN_UPDATE, function(...) CDGSL:ReticleHiddenUpdate(...) end)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_CLOSED, function(...) CDGSL:LootClosed(...) end)	
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CHATTER_END, function(...) CDGSL:ChatterEnd(...) end)
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
 	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) 
 		addDebugMessage("MoneyUpdate " .. argsToString(...))
 		CDGSL:MoneyUpdate(...) 

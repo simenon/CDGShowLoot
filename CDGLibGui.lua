@@ -4,7 +4,16 @@ CDGLibGui = {
 		BACKDROP = nil,
 		TEXTBUFFER = nil 
 	},
+	fontstyles = {
+		" ",
+		"soft-shadow-thick",
+		"soft-shadow-thin"
+	},
 	defaults = {
+		general = {
+			isMovable = true,
+			isHidden = false
+		},
 		anchor = {
 			point = TOPLEFT,
 			relativeTo = GuiRoot,
@@ -19,7 +28,7 @@ CDGLibGui = {
 		font = {
 			name = "EsoUi/Common/Fonts/Univers57.otf",
 			height = "14",
-			style = "soft-shadow-thick"
+			style = ""
 		}
 	}
 }
@@ -35,7 +44,7 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.ID = WINDOW_MANAGER:CreateTopLevelWindow(nil)
 		CDGLibGui.window.ID:SetAlpha(0.8)
 		CDGLibGui.window.ID:SetMouseEnabled(true)		
-		CDGLibGui.window.ID:SetMovable(true)
+		CDGLibGui.window.ID:SetMovable( savedVars_CDGlibGui.general.isMovable )
 		CDGLibGui.window.ID:SetClampedToScreen(true)
 		CDGLibGui.window.ID:SetDimensions( savedVars_CDGlibGui.dimensions.width, savedVars_CDGlibGui.dimensions.height )
 		CDGLibGui.window.ID:SetResizeHandleSize(8)
@@ -57,7 +66,7 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.TEXTBUFFER:SetClearBufferAfterFadeout(false)
 		CDGLibGui.window.TEXTBUFFER:SetLineFade(5, 3)
 		CDGLibGui.window.TEXTBUFFER:SetMaxHistoryLines(40)
-		CDGLibGui.window.TEXTBUFFER:SetDimensions(500-64, 264-64)
+		CDGLibGui.window.TEXTBUFFER:SetDimensions(savedVars_CDGlibGui.dimensions.width-64, savedVars_CDGlibGui.dimensions.height-64)
 		CDGLibGui.window.TEXTBUFFER:SetAnchor(TOPLEFT,CDGLibGui.window.ID,TOPLEFT,32,32)
 	
 		CDGLibGui.window.BACKDROP = WINDOW_MANAGER:CreateControl(nil, CDGLibGui.window.ID, CT_BACKDROP)
@@ -71,15 +80,44 @@ function CDGLibGui.CreateWindow( )
 		end) 
 	
 		CDGLibGui.window.ID:SetHandler( "OnMouseEnter", function(self, ...) 
-			CDGLibGui.OnMouseEnter() 
+			CDGLibGui.window.BACKDROP:SetHidden( false )
 		end )
 	
 		CDGLibGui.window.ID:SetHandler( "OnMouseExit" , function(self, ...) 
-			CDGLibGui.OnMouseExit() 
+			zo_callLater(function() CDGLibGui.delayedHide() end , 5000)	
 		end )		
-	
-		CDGLibGui.window.ID:SetHandler( "OnMouseDown" , function() CDGLibGui.OnMouseDown() end )	
-		CDGLibGui.window.ID:SetHandler( "OnDragStart" , function() CDGLibGui.OnDragStart() end )
+
+
+		CDGLibGui.window.ID:SetHandler( "OnResizeStop" , function(self, ...) 
+			savedVars_CDGlibGui.dimensions.width, savedVars_CDGlibGui.dimensions.height = CDGLibGui.window.ID:GetDimensions()
+			CDGLibGui.window.TEXTBUFFER:SetDimensions(savedVars_CDGlibGui.dimensions.width-64, savedVars_CDGlibGui.dimensions.height-64)
+		end )
+
+		CDGLibGui.window.ID:SetHandler( "OnMoveStop" , function(self, ...) 
+			local isValidAnchor, point, relativeTo, relativePoint, offsetX, offsetY = CDGLibGui.window.ID:GetAnchor()
+			if isValidAnchor then
+				savedVars_CDGlibGui.anchor.point = point
+				savedVars_CDGlibGui.anchor.relativeTo = relativeTo
+				savedVars_CDGlibGui.anchor.relativePoint = relativePoint
+				savedVars_CDGlibGui.anchor.xPos = offsetX
+				savedVars_CDGlibGui.anchor.yPos = offsetY
+				CDGLibGui.window.ID:ClearAnchors()
+				CDGLibGui.window.ID:SetAnchor(
+					savedVars_CDGlibGui.anchor.point, 
+					savedVars_CDGlibGui.anchor.relativeTo, 
+					savedVars_CDGlibGui.anchor.relativePoint, 
+					savedVars_CDGlibGui.anchor.xPos, 
+					savedVars_CDGlibGui.anchor.yPos )
+			end
+		end )
+
+		--CDGLibGui.window.ID:SetHandler( "OnMouseDown" , function() 
+		--	CDGLibGui.window.BACKDROP:SetHidden( false )
+		--end )	
+
+		--CDGLibGui.window.ID:SetHandler( "OnDragStart" , function() 
+		--	CDGLibGui.window.BACKDROP:SetHidden( false )
+		--end )
 		
 		CDGLibGui.window.ID:SetHandler( "OnMouseWheel", function(self, ...)  
 			CDGLibGui.window.TEXTBUFFER:MoveScrollPosition(...) 
@@ -87,57 +125,50 @@ function CDGLibGui.CreateWindow( )
 	end
 end
 
-function CDGLibGui.OnMouseEnter()
-	CDGLibGui.window.BACKDROP:SetHidden( false )
-end
-
-function CDGLibGui.OnMouseExit()
-	--if CDGLibGui.window.ID:IsMovable() then
-		local isValidAnchor, point, relativeTo, relativePoint, offsetX, offsetY = CDGLibGui.window.ID:GetAnchor()
-		if isValidAnchor then
---			addDebugMessage("x"..offsetX.."y"..offsetY)
-			savedVars_CDGlibGui.anchor.point = point
-			savedVars_CDGlibGui.anchor.relativeTo = relativeTo
-			savedVars_CDGlibGui.anchor.relativePoint = relativePoint
-			savedVars_CDGlibGui.anchor.xPos = offsetX
-			savedVars_CDGlibGui.anchor.yPos = offsetY
-			CDGLibGui.window.ID:ClearAnchors()
-			CDGLibGui.window.ID:SetAnchor(
-				savedVars_CDGlibGui.anchor.point, 
-				savedVars_CDGlibGui.anchor.relativeTo, 
-				savedVars_CDGlibGui.anchor.relativePoint, 
-				savedVars_CDGlibGui.anchor.xPos, 
-				savedVars_CDGlibGui.anchor.yPos )
-		end
-	--end
-	
-	isHidden = GetGameTimeMilliseconds()
---	addDebugMessage("Call to hide at " .. isHidden)
-	zo_callLater(function() CDGLibGui.delayedHide() end , 5000)	
-end
-
-function CDGLibGui.OnMouseDown()		
-	CDGLibGui.window.BACKDROP:SetHidden( false )
-end
-
-function CDGLibGui.OnDragStart()
-	CDGLibGui.window.BACKDROP:SetHidden( false )
-end
-
 function CDGLibGui.delayedHide()		
 	if ( ( isHidden + 4900 ) < GetGameTimeMilliseconds() ) then
---		addDebugMessage("Hiding at " .. GetGameTimeMilliseconds())
 		CDGLibGui.window.BACKDROP:SetHidden( true )
 	end
 end
 
-function CDGLibGui.setWindowLock(value)
+function CDGLibGui.setMovable(value)
+	savedVars_CDGlibGui.general.isMovable = value
 	CDGLibGui.window.ID:SetMovable(value)
+end
+
+function CDGLibGui.isMovable()
+	return savedVars_CDGlibGui.general.isMovable
+end
+
+function CDGLibGui.setHidden(value)
+	savedVars_CDGlibGui.general.isHidden = value
+	CDGLibGui.window.ID:SetHidden(value)
+end
+
+function CDGLibGui.isHidden()
+	return savedVars_CDGlibGui.general.isHidden
 end
 
 function CDGLibGui.setFontSize(value)
 	savedVars_CDGlibGui.font.height = value
-	CDGLibGui.addMessage("Font size changed to " .. savedVars_CDGlibGui.font.height .. ", please do a /reloadui")
+	CDGLibGui.addMessage("Font size changed, please do a /reloadui")
+end
+
+function CDGLibGui.getFontSize()
+	return savedVars_CDGlibGui.font.height
+end
+
+function CDGLibGui.getFontStyles()
+	return CDGLibGui.fontstyles
+end
+
+function CDGLibGui.getFontStyle()
+	return savedVars_CDGlibGui.font.style
+end
+
+function CDGLibGui.setFontStyle(value)
+	savedVars_CDGlibGui.font.style = value
+	CDGLibGui.addMessage("Font style changed, please do a /reloadui")
 end
 
 function CDGLibGui.addMessage(message)
