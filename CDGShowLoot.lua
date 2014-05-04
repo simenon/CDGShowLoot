@@ -1,25 +1,52 @@
 local LAM = LibStub:GetLibrary("LibAddonMenu-1.0")
 local CDGSL = ZO_Object:Subclass()
 
+local Player = { 
+	isCrafting = false,
+	LastLootName = nil,
+	LootList = nil,
+	logging = {} 
+}
 
-local delayedHide = false
-
-Player = { logging = {} }
-
-Player.isCrafting = false
-Player.LastLootName = nil
-Player.LootList = nil
-
-
-Color = {
+local Color = {
 	Green3 = "|c00CD00",
 	Red3 = "|CD00000"
 }
 
-CDGShowLoot = {
-	defaults = {
+local localVars = {
+	defaults = {	
+		filter = {
+			gold = false,	
+			self = {
+				JUNK = false,
+				NORMAL = false,
+				FINE = false,
+				SUPERIOR = false,
+				EPIC = false,
+				LEGENDARY = false
+			},
+			group = {
+				JUNK = true,
+				NORMAL = true,
+				FINE = false,
+				SUPERIOR = false,
+				EPIC = false,
+				LEGENDARY = false
+			}
+		},
+		playerColor = "4C4CFF",
+		groupColor = "4C4CFF",
 		logToDefaultChat = false
 	}
+}
+
+local LOOTCOLOR = {
+	JUNK = "C3C3C3",
+	NORMAL = "FFFFFF",
+	FINE = "2DC50E",
+	SUPERIOR = "3A92FF",
+	EPIC = "A02EF7",
+	LEGENDARY = "EECA2A"
 }
 
 local savedVars_CDGShowLoot = {}
@@ -116,7 +143,14 @@ function CDGSL:LootClosed(...)
 			local l = List.pop(Player.LootList)
 			local l_peek = List.peek(Player.LootList)
 			
-			if msg == "" then msg = msg .. "|c4C4CFF" .. l.who .. "|r" end
+
+			if msg == "" then 
+				if GetUnitName("player") == l.who then
+					msg = msg .. "|c" .. savedVars_CDGShowLoot.playerColor .. l.who .. "|r" 
+				else
+					msg = msg .. "|c" .. savedVars_CDGShowLoot.groupColor.. l.who .. "|r" 
+				end
+			end
 			
 			while not List.empty(Player.LootList) do
 			
@@ -170,16 +204,35 @@ function CDGSL:ReticleHiddenUpdate(_, hidden, ...)
 end
 
 function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
+	local _, color, _ = ZO_LinkHandler_ParseLink (itemName)
 	if self then	
-		itemName = CDGSL:StripControlCharacters(itemName)
-		List.push(Player.LootList, {who = GetUnitName("player"), qty = quantity, val = itemName})	
+		if 	(savedVars_CDGShowLoot.filter.self.JUNK and (color == LOOTCOLOR.JUNK)) or 
+		   	(savedVars_CDGShowLoot.filter.self.NORMAL and (color == LOOTCOLOR.NORMAL)) or
+		   	(savedVars_CDGShowLoot.filter.self.FINE and (color == LOOTCOLOR.FINE)) or
+			(savedVars_CDGShowLoot.filter.self.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
+			(savedVars_CDGShowLoot.filter.self.EPIC and (color == LOOTCOLOR.EPIC)) or
+			(savedVars_CDGShowLoot.filter.self.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+			--
+			-- nothing
+			--
+		else
+			itemName = CDGSL:StripControlCharacters(itemName)
+			List.push(Player.LootList, {who = GetUnitName("player"), qty = quantity, val = itemName})	
+		end
 	else	  
-		local _, color, _ = ZO_LinkHandler_ParseLink (itemName) 
-			
-		lootedBy = CDGSL:StripControlCharacters(lootedBy)
-		itemName = CDGSL:StripControlCharacters(itemName)
-			
-		if color ~= "FFFFFF" and color ~= "C3C3C3" then -- No whites and grays
+		if 	(savedVars_CDGShowLoot.filter.group.JUNK and (color == LOOTCOLOR.JUNK)) or 
+		   	(savedVars_CDGShowLoot.filter.group.NORMAL and (color == LOOTCOLOR.NORMAL)) or
+		   	(savedVars_CDGShowLoot.filter.group.FINE and (color == LOOTCOLOR.FINE)) or
+			(savedVars_CDGShowLoot.filter.group.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
+			(savedVars_CDGShowLoot.filter.group.EPIC and (color == LOOTCOLOR.EPIC)) or
+			(savedVars_CDGShowLoot.filter.group.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+			--
+			-- nothing
+			--
+		else
+			lootedBy = CDGSL:StripControlCharacters(lootedBy)
+			itemName = CDGSL:StripControlCharacters(itemName)
+
 			List.push(Player.LootList, {who = lootedBy, qty = quantity, val = itemName})
 				
 			CDGSL:SetDelayedLootUpdate()
@@ -188,7 +241,9 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 end
 
 function CDGSL:MoneyUpdate(_, newMoney, oldMoney,...) 
-	List.push(Player.LootList, {who = GetUnitName("player"), qty = (newMoney - oldMoney), val = "gold"})
+	if not savedVars_CDGShowLoot.filter.gold then
+		List.push(Player.LootList, {who = GetUnitName("player"), qty = (newMoney - oldMoney), val = "gold"})
+	end
 end
 
 function CDGSL:CraftingStationInteract(...)
@@ -204,12 +259,23 @@ function CDGSL:CraftCompleted(...)
 	local items = GetNumLastCraftingResultItems()
 	local _, bagslots = GetBagInfo(BAG_BACKPACK)
 	for i=1, items do
-		itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo(i)
-		
+		local itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo(i)
 		local itemLink = CDGSL:LookUpItemNameInBag(itemName)
+		local _, color, _ = ZO_LinkHandler_ParseLink (itemLink)
 		itemLink = CDGSL:StripControlCharacters(itemLink)
-		List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
-	
+		
+		if 	(savedVars_CDGShowLoot.filter.self.JUNK and (color == LOOTCOLOR.JUNK)) or 
+		   	(savedVars_CDGShowLoot.filter.self.NORMAL and (color == LOOTCOLOR.NORMAL)) or
+		   	(savedVars_CDGShowLoot.filter.self.FINE and (color == LOOTCOLOR.FINE)) or
+			(savedVars_CDGShowLoot.filter.self.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
+			(savedVars_CDGShowLoot.filter.self.EPIC and (color == LOOTCOLOR.EPIC)) or
+			(savedVars_CDGShowLoot.filter.self.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+		--
+		-- Do Nothing
+		--
+		else
+			List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
+		end
 	end
     CDGSL:LootClosed()
 end
@@ -232,10 +298,26 @@ end
 
 function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 	if(addOnName == "CDGShowLoot") then
-		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 1, nil, CDGShowLoot.defaults)
+		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
 		CDGLibGui.initializeSavedVariable()		
 		CDGLibGui.CreateWindow()
-		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.1|r Loaded")
+		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.2|r Loaded")
+
+		CDGSL:InitializeLAMSettings()
+
+		Player.LootList = List.new()
+		--
+		-- No point starting these events earlier till the addon is fully loaded.
+		--
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFTING_STATION_INTERACT, function(...) CDGSL:CraftingStationInteract(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_END_CRAFTING_STATION_INTERACT, function(...) CDGSL:EndCraftingStationInteract(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFT_COMPLETED, function(...) CDGSL:CraftCompleted(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_RETICLE_HIDDEN_UPDATE, function(...) CDGSL:ReticleHiddenUpdate(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_CLOSED, function(...) CDGSL:LootClosed(...) end)	
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CHATTER_END, function(...) CDGSL:ChatterEnd(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) CDGSL:MoneyUpdate(...) end )
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
     end
 end
 
@@ -246,34 +328,63 @@ function CDGSL:sendMessage(message)
 	CDGLibGui.addMessage(message)
 end
 
+local function RGBtoHEX(r,g,b,a)
+	local hex = ""
+	--if a then
+	--	hex = string.format("%.2x%.2x%.2x%.2x", math.floor(a * 255),math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
+	--else
+		hex = string.format("%.2x%.2x%.2x", math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
+	--end
+	return hex
+end
+
+local function HEXtoRGB(hex)
+    local a, r, g, b
+    
+    if(string.len(hex) == 8)
+    then
+        a, r, g, b = tonumber("0x"..string.sub(hex, 1, 2)) / 255, tonumber("0x"..string.sub(hex, 3, 4)) / 255, tonumber("0x"..string.sub(hex, 5, 6)) / 255, tonumber("0x"..string.sub(hex, 7, 8)) / 255
+    elseif(string.len(hex) == 6)
+    then
+        a, r, g, b = 1, tonumber("0x"..string.sub(hex, 1, 2)) / 255, tonumber("0x"..string.sub(hex, 3, 4)) / 255, tonumber("0x"..string.sub(hex, 5, 6)) / 255
+    end
+    
+    if(a)
+    then
+        return r, g, b, a
+    end
+	
+end
+
 function CDGSL:InitializeLAMSettings()
 	local lamID = "CDGShowLootLAM"
 	local panelID = LAM:CreateControlPanel(lamID, "CDG Show Loot")
 	LAM:AddHeader(panelID, lamID.."Header".."GO", "General Options")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to main chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function(...) return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function(...) return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
+	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)
+	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Group", "Group Color", nil,  function() return HEXtoRGB(savedVars_CDGShowLoot.groupColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.groupColor = RGBtoHEX(r,g,b,a) end, false, nil)
 	LAM:AddHeader(panelID, lamID.."Header".."FS", "Font Settings")
 	LAM:AddSlider(panelID, lamID.."Slider", "Font Size", nil, 10, 30, 1, function(...) return CDGLibGui.getFontSize() end, function(...) CDGLibGui.setFontSize(...) end, false, nil)
 	LAM:AddDropdown(panelID, lamID.."Dropdown", "Font Style", nil, CDGLibGui.fontstyles, function(...) return CDGLibGui.getFontStyle() end, function(...) return CDGLibGui.setFontStyle(...) end, false, nil)
+	LAM:AddHeader(panelID, lamID.."Header".."PLS", "Personal Loot Filters")
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Junk",      "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.JUNK end,      function(value) savedVars_CDGShowLoot.filter.self.JUNK = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Normal",    "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", function() return savedVars_CDGShowLoot.filter.self.NORMAL end,    function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Fine",      "|c"..LOOTCOLOR.FINE.."Fine".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.FINE end,      function(value) savedVars_CDGShowLoot.filter.self.FINE = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Superior",  "|c"..LOOTCOLOR.SUPERIOR.."Superior".."|r",  "", function() return savedVars_CDGShowLoot.filter.self.SUPERIOR end,  function(value) savedVars_CDGShowLoot.filter.self.SUPERIOR = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Epic",      "|c"..LOOTCOLOR.EPIC.."Epic".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.EPIC end,      function(value) savedVars_CDGShowLoot.filter.self.EPIC = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Legendary", "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", function() return savedVars_CDGShowLoot.filter.self.LEGENDARY end, function(value) savedVars_CDGShowLoot.filter.self.LEGENDARY = value end, false, nil)
+	LAM:AddHeader(panelID, lamID.."Header".."GLS", "Group Loot Filters")
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Junk",      "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", function() return savedVars_CDGShowLoot.filter.group.JUNK end,      function(value) savedVars_CDGShowLoot.filter.group.JUNK = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Normal",    "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", function() return savedVars_CDGShowLoot.filter.group.NORMAL end,    function(value) savedVars_CDGShowLoot.filter.group.NORMAL = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Fine",      "|c"..LOOTCOLOR.FINE.."Fine".."|r",          "", function() return savedVars_CDGShowLoot.filter.group.FINE end,      function(value) savedVars_CDGShowLoot.filter.group.FINE = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Superior",  "|c"..LOOTCOLOR.SUPERIOR.."Superior".."|r",  "", function() return savedVars_CDGShowLoot.filter.group.SUPERIOR end,  function(value) savedVars_CDGShowLoot.filter.group.SUPERIOR = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Epic",      "|c"..LOOTCOLOR.EPIC.."Epic".."|r",          "", function() return savedVars_CDGShowLoot.filter.group.EPIC end,      function(value) savedVars_CDGShowLoot.filter.group.EPIC = value end, false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Legendary", "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", function() return savedVars_CDGShowLoot.filter.group.LEGENDARY end, function(value) savedVars_CDGShowLoot.filter.group.LEGENDARY = value end, false, nil)
 end
 
 function CDGSL_OnInitialized()
-	CDGSL:InitializeLAMSettings()
-
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:AddonLoaded(...) end )
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFTING_STATION_INTERACT, function(...) CDGSL:CraftingStationInteract(...) end)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_END_CRAFTING_STATION_INTERACT, function(...) CDGSL:EndCraftingStationInteract(...) end)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFT_COMPLETED, function(...) CDGSL:CraftCompleted(...) end)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_RETICLE_HIDDEN_UPDATE, function(...) CDGSL:ReticleHiddenUpdate(...) end)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_CLOSED, function(...) CDGSL:LootClosed(...) end)	
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CHATTER_END, function(...) CDGSL:ChatterEnd(...) end)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) 
-		addDebugMessage("MoneyUpdate " .. argsToString(...))
-		CDGSL:MoneyUpdate(...) 
-	end )
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
-	
-	Player.LootList = List.new()	
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:AddonLoaded(...) end )	
 end

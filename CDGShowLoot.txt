@@ -1,6 +1,6 @@
 ## APIVersion: 100003
-## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.1|r
-## Version: 2.1
+## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.2|r
+## Version: 2.2
 ## Author: CrazyDutchGuy
 ## SavedVariables: CDGShowLoot_SavedVariables 
 ## SavedVariables: CDGLibGui_SavedVariables
