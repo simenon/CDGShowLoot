@@ -260,21 +260,36 @@ function CDGSL:CraftCompleted(...)
 	local _, bagslots = GetBagInfo(BAG_BACKPACK)
 	for i=1, items do
 		local itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo(i)
+		if itemName == nil then 
+			CDGSL:sendMessage("Failed to retrieve last crafting results") 
+		end
 		local itemLink = CDGSL:LookUpItemNameInBag(itemName)
-		local _, color, _ = ZO_LinkHandler_ParseLink (itemLink)
-		itemLink = CDGSL:StripControlCharacters(itemLink)
-		
-		if 	(savedVars_CDGShowLoot.filter.self.JUNK and (color == LOOTCOLOR.JUNK)) or 
-		   	(savedVars_CDGShowLoot.filter.self.NORMAL and (color == LOOTCOLOR.NORMAL)) or
-		   	(savedVars_CDGShowLoot.filter.self.FINE and (color == LOOTCOLOR.FINE)) or
-			(savedVars_CDGShowLoot.filter.self.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
-			(savedVars_CDGShowLoot.filter.self.EPIC and (color == LOOTCOLOR.EPIC)) or
-			(savedVars_CDGShowLoot.filter.self.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+		if itemLink == nil then 
+			CDGSL:sendMessage("Failed to look up item [" .. itemName .. "], retrying ...")
+			itemLink = CDGSL:LookUpItemNameInBag(itemName)
+			if itemLink == nil then 
+				CDGSL:sendMessage("Retry failed, giving up...")
+			end
+		end
 		--
-		-- Do Nothing
+		-- Some odd cases it can happen that the itemLink is nil, but why ...
 		--
-		else
-			List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
+		if itemLink ~= nil then
+			local _, color, _ = ZO_LinkHandler_ParseLink (itemLink)
+			
+			if 	(savedVars_CDGShowLoot.filter.self.JUNK and (color == LOOTCOLOR.JUNK)) or 
+			   	(savedVars_CDGShowLoot.filter.self.NORMAL and (color == LOOTCOLOR.NORMAL)) or
+			   	(savedVars_CDGShowLoot.filter.self.FINE and (color == LOOTCOLOR.FINE)) or
+				(savedVars_CDGShowLoot.filter.self.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
+				(savedVars_CDGShowLoot.filter.self.EPIC and (color == LOOTCOLOR.EPIC)) or
+				(savedVars_CDGShowLoot.filter.self.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+			--
+			-- Do Nothing
+			--
+			else		
+				itemLink = CDGSL:StripControlCharacters(itemLink)
+				List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
+			end
 		end
 	end
     CDGSL:LootClosed()
@@ -301,7 +316,7 @@ function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
 		CDGLibGui.initializeSavedVariable()		
 		CDGLibGui.CreateWindow()
-		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.2|r Loaded")
+		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.3|r Loaded")
 
 		CDGSL:InitializeLAMSettings()
 
@@ -362,8 +377,10 @@ function CDGSL:InitializeLAMSettings()
 	LAM:AddHeader(panelID, lamID.."Header".."GO", "General Options")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to main chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideBG", "Hide the background", nil, function() return CDGLibGui.isBackgroundHidden() end, function(...) CDGLibGui.setBackgroundHidden(...) end,  true, "Without background you can not resize or move the window.")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
+	LAM:AddSlider(panelID, lamID.."Slider".."TTTFO", "Time till text fades out", nil, 0, 10, 1, function(...) return CDGLibGui.getTimeTillLineFade() end, function(...) CDGLibGui.setTimeTillLineFade(...) end, true, "Text will not fade out when set at 0")
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Group", "Group Color", nil,  function() return HEXtoRGB(savedVars_CDGShowLoot.groupColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.groupColor = RGBtoHEX(r,g,b,a) end, false, nil)
 	LAM:AddHeader(panelID, lamID.."Header".."FS", "Font Settings")

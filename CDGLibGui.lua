@@ -14,7 +14,8 @@ CDGLibGui = {
 	defaults = {
 		general = {
 			isMovable = true,
-			isHidden = false
+			isHidden = false,
+			isBackgroundHidden = false
 		},
 		anchor = {
 			point = TOPLEFT,
@@ -36,7 +37,9 @@ CDGLibGui = {
 		maxAlpha = 0.8,
 		fadeInDelay = 0,
 		fadeOutDelay = 1000,
-		fadeDuration = 700
+		fadeDuration = 700,
+		lineFadeTime = 5,
+		lineFadeDuration = 3
 	},
 	fadeOutCheckOnUpdate = nil
 }
@@ -51,7 +54,11 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.ID:SetMovable( savedVars_CDGlibGui.general.isMovable )
 		CDGLibGui.window.ID:SetClampedToScreen(true)
 		CDGLibGui.window.ID:SetDimensions( savedVars_CDGlibGui.dimensions.width, savedVars_CDGlibGui.dimensions.height )
-		CDGLibGui.window.ID:SetResizeHandleSize(8)
+		if savedVars_CDGlibGui.general.isBackgroundHidden then
+			CDGLibGui.window.ID:SetResizeHandleSize(0)
+		else
+			CDGLibGui.window.ID:SetResizeHandleSize(8)
+		end
 		CDGLibGui.window.ID:SetDrawLevel(0)
 		CDGLibGui.window.ID:SetDrawLayer(0)
 		CDGLibGui.window.ID:SetDrawTier(0)
@@ -61,6 +68,7 @@ function CDGLibGui.CreateWindow( )
 			savedVars_CDGlibGui.anchor.relativePoint, 
 			savedVars_CDGlibGui.anchor.xPos, 
 			savedVars_CDGlibGui.anchor.yPos )	
+		CDGLibGui.window.ID:SetHidden(savedVars_CDGlibGui.general.isHidden)
 
 		CDGLibGui.window.ID.isResizing = false		
 				
@@ -68,10 +76,9 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.TEXTBUFFER:SetLinkEnabled(true)
 		CDGLibGui.window.TEXTBUFFER:SetMouseEnabled(true)
 		CDGLibGui.window.TEXTBUFFER:SetFont(savedVars_CDGlibGui.font.name.."|"..savedVars_CDGlibGui.font.height.."|"..savedVars_CDGlibGui.font.style)
-		CDGLibGui.window.TEXTBUFFER:SetHidden(false)
 		CDGLibGui.window.TEXTBUFFER:SetClearBufferAfterFadeout(false)
-		CDGLibGui.window.TEXTBUFFER:SetLineFade(5, 3)
-		CDGLibGui.window.TEXTBUFFER:SetMaxHistoryLines(40)
+		CDGLibGui.window.TEXTBUFFER:SetLineFade(savedVars_CDGlibGui.lineFadeTime, savedVars_CDGlibGui.lineFadeDuration)
+		CDGLibGui.window.TEXTBUFFER:SetMaxHistoryLines(100)
 		CDGLibGui.window.TEXTBUFFER:SetDimensions(savedVars_CDGlibGui.dimensions.width-64, savedVars_CDGlibGui.dimensions.height-64)
 		CDGLibGui.window.TEXTBUFFER:SetAnchor(TOPLEFT,CDGLibGui.window.ID,TOPLEFT,32,32)
 	
@@ -80,6 +87,7 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.BACKDROP:SetEdgeTexture([[/esoui/art/chatwindow/chat_bg_edge.dds]], 32, 32, 32, 0)
 		CDGLibGui.window.BACKDROP:SetInsets(32,32,-32,-32)	
 		CDGLibGui.window.BACKDROP:SetAnchorFill(CDGLibGui.window.ID)
+		CDGLibGui.window.BACKDROP:SetHidden(savedVars_CDGlibGui.general.isBackgroundHidden)
 	
 		if not savedVars_CDGlibGui.general.isMovable then
 			CDGLibGui.FadeOut()
@@ -91,11 +99,7 @@ function CDGLibGui.CreateWindow( )
 	
 
 		CDGLibGui.window.TEXTBUFFER:SetHandler( "OnMouseEnter", function(self, ...) 
-       		if not CDGLibGui.window.BACKDROP.fadeAnim then
-       			CDGLibGui.window.BACKDROP.fadeAnim = ZO_AlphaAnimation:New(CDGLibGui.window.BACKDROP)
-       		end
-			CDGLibGui.window.BACKDROP.fadeAnim:SetMinMaxAlpha(savedVars_CDGlibGui.minAlpha, savedVars_CDGlibGui.maxAlpha)
-    		CDGLibGui.window.BACKDROP.fadeAnim:FadeIn(savedVars_CDGlibGui.fadeInDelay, savedVars_CDGlibGui.fadeDuration)
+			CDGLibGui.FadeIn()
 
     		CDGLibGui.window.TEXTBUFFER:ShowFadedLines()
 
@@ -141,11 +145,23 @@ function CDGLibGui.CreateWindow( )
 end
 
 function CDGLibGui.FadeOut()
-	if not CDGLibGui.window.BACKDROP.fadeAnim then
-		CDGLibGui.window.BACKDROP.fadeAnim = ZO_AlphaAnimation:New(CDGLibGui.window.BACKDROP)
+	if not savedVars_CDGlibGui.general.isBackgroundHidden then
+		if not CDGLibGui.window.BACKDROP.fadeAnim then
+			CDGLibGui.window.BACKDROP.fadeAnim = ZO_AlphaAnimation:New(CDGLibGui.window.BACKDROP)
+		end
+		CDGLibGui.window.BACKDROP.fadeAnim:SetMinMaxAlpha(savedVars_CDGlibGui.minAlpha, savedVars_CDGlibGui.maxAlpha)
+		CDGLibGui.window.BACKDROP.fadeAnim:FadeOut(savedVars_CDGlibGui.fadeOutDelay, savedVars_CDGlibGui.fadeDuration)
 	end
-	CDGLibGui.window.BACKDROP.fadeAnim:SetMinMaxAlpha(savedVars_CDGlibGui.minAlpha, savedVars_CDGlibGui.maxAlpha)
-	CDGLibGui.window.BACKDROP.fadeAnim:FadeOut(savedVars_CDGlibGui.fadeOutDelay, savedVars_CDGlibGui.fadeDuration)
+end
+
+function CDGLibGui.FadeIn()
+	if not savedVars_CDGlibGui.general.isBackgroundHidden then
+       	if not CDGLibGui.window.BACKDROP.fadeAnim then
+       		CDGLibGui.window.BACKDROP.fadeAnim = ZO_AlphaAnimation:New(CDGLibGui.window.BACKDROP)
+       	end
+		CDGLibGui.window.BACKDROP.fadeAnim:SetMinMaxAlpha(savedVars_CDGlibGui.minAlpha, savedVars_CDGlibGui.maxAlpha)
+    	CDGLibGui.window.BACKDROP.fadeAnim:FadeIn(savedVars_CDGlibGui.fadeInDelay, savedVars_CDGlibGui.fadeDuration)
+    end
 end
 
 function CDGLibGui.IsMouseInside()
@@ -173,6 +189,29 @@ end
 function CDGLibGui.setMovable(value)
 	savedVars_CDGlibGui.general.isMovable = value
 	CDGLibGui.window.ID:SetMovable(value)
+end
+
+function CDGLibGui.getTimeTillLineFade()
+	return savedVars_CDGlibGui.lineFadeTime
+end
+
+function CDGLibGui.setTimeTillLineFade(value)
+	savedVars_CDGlibGui.lineFadeTime = value
+	CDGLibGui.window.TEXTBUFFER:SetLineFade(savedVars_CDGlibGui.lineFadeTime, savedVars_CDGlibGui.lineFadeDuration)
+end
+
+function CDGLibGui.setBackgroundHidden(value)
+	savedVars_CDGlibGui.general.isBackgroundHidden = value
+	CDGLibGui.window.BACKDROP:SetHidden(value)
+	if savedVars_CDGlibGui.general.isBackgroundHidden then
+		CDGLibGui.window.ID:SetResizeHandleSize(0)
+	else
+		CDGLibGui.window.ID:SetResizeHandleSize(8)
+	end
+end
+
+function CDGLibGui.isBackgroundHidden()
+	return savedVars_CDGlibGui.general.isBackgroundHidden
 end
 
 function CDGLibGui.isMovable()
