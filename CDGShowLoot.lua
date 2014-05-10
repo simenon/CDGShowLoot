@@ -290,24 +290,13 @@ function CDGSL:QuestRemoved(isCompleted, ...)
 	end
 end
 
-function CDGSL:EVENT_ACTION_LAYER_PUSHED(eventCode, layerIndex, activeLayerIndex)
-	if layerIndex ~= 6 and CDGLibGui.isHiddenInDialogs() then
-		CDGLibGui.Hide()
-	end
-end
-
-function CDGSL:EVENT_ACTION_LAYER_POPPED(eventCode, layerIndex, activeLayerIndex)
-	if layerIndex == 6 then
-		CDGLibGui.Show()
-	end
-end
 
 function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 	if(addOnName == "CDGShowLoot") then
 		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
 		CDGLibGui.initializeSavedVariable()		
-		CDGLibGui.CreateWindow()
-		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.3|r Loaded")
+		CDGLibGui.CreateWindow()		
+		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.4|r Loaded")
 
 		CDGSL:InitializeLAMSettings()
 
@@ -324,8 +313,6 @@ function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) CDGSL:MoneyUpdate(...) end )
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ACTION_LAYER_PUSHED, function(...) CDGSL:EVENT_ACTION_LAYER_PUSHED(...) end )	
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ACTION_LAYER_POPPED, function(...) CDGSL:EVENT_ACTION_LAYER_POPPED(...) end )	
     end
 end
 
@@ -367,7 +354,7 @@ function CDGSL:InitializeLAMSettings()
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideBG", "Hide the background", nil, function() return CDGLibGui.isBackgroundHidden() end, function(...) CDGLibGui.setBackgroundHidden(...) end,  true, "Without background you can not resize or move the window.")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideInDialog", "Hide when in dialog", nil, function() return CDGLibGui.isHiddenInDialogs() end, function(...) CDGLibGui.HideInDialogs(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideInDialog", "Hide when in dialog", nil, function() return CDGLibGui.isHiddenInDialogs() end, function(...) CDGLibGui.HideInDialogs(...) end,  true, "only takes effect after /reloadui")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
 	LAM:AddSlider(panelID, lamID.."Slider".."TTTFO", "Time till text fades out", nil, 0, 10, 1, function(...) return CDGLibGui.getTimeTillLineFade() end, function(...) CDGLibGui.setTimeTillLineFade(...) end, true, "Text will not fade out when set at 0")
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)

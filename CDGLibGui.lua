@@ -69,6 +69,7 @@ function CDGLibGui.CreateWindow( )
 			savedVars_CDGlibGui.anchor.relativePoint, 
 			savedVars_CDGlibGui.anchor.xPos, 
 			savedVars_CDGlibGui.anchor.yPos )	
+
 		CDGLibGui.window.ID:SetHidden(savedVars_CDGlibGui.general.isHidden)
 
 		CDGLibGui.window.ID.isResizing = false		
@@ -142,6 +143,12 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.ID:SetHandler( "OnMouseWheel", function(self, ...)  
 			CDGLibGui.window.TEXTBUFFER:MoveScrollPosition(...) 
 		end )
+
+		if savedVars_CDGlibGui.general.hideInDialogs then
+			local fragment = ZO_FadeSceneFragment:New( CDGLibGui.window.ID )	
+			SCENE_MANAGER:GetScene('hud'):AddFragment( fragment )	
+			SCENE_MANAGER:GetScene('hudui'):AddFragment( fragment )
+		end
 	end
 end
 
