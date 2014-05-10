@@ -4,13 +4,12 @@ local CDGSL = ZO_Object:Subclass()
 local Player = { 
 	isCrafting = false,
 	LastLootName = nil,
-	LootList = nil,
-	logging = {} 
+	LootList = nil
 }
 
-local Color = {
-	Green3 = "|c00CD00",
-	Red3 = "|CD00000"
+local COLOR = {
+	GREEN = "00CD00",
+	RED= "D00000"
 }
 
 local localVars = {
@@ -51,7 +50,7 @@ local LOOTCOLOR = {
 
 local savedVars_CDGShowLoot = {}
 
-List = {}
+local List = {}
 
 function List.new()
 	return {first = 1, last = 0}
@@ -89,20 +88,6 @@ end
 
 function List.elements(list)
 	return list.last
-end
-
-function argsToString(...)
-	local msg=""
-	for i,v in ipairs({...}) do
-        msg = msg .. tostring(i) .. ":[" .. tostring(v) .."]"
-    end
-	return "{" .. msg .. "}"
-end
-
-function CDGSL:StripControlCharacters(s)
-	s = string.gsub(s,"%^%ax","")
-	s = string.gsub(s,"%^%a","")
-	return s
 end
 
 function CDGSL:SetDelayedLootUpdate()
@@ -146,9 +131,9 @@ function CDGSL:LootClosed(...)
 
 			if msg == "" then 
 				if GetUnitName("player") == l.who then
-					msg = msg .. "|c" .. savedVars_CDGShowLoot.playerColor .. l.who .. "|r" 
+					msg = msg .. zo_strformat("|c<<1>> <<2>>|r", savedVars_CDGShowLoot.playerColor, l.who ) 					
 				else
-					msg = msg .. "|c" .. savedVars_CDGShowLoot.groupColor.. l.who .. "|r" 
+					msg = msg .. zo_strformat("|c<<1>> <<2>>|r", savedVars_CDGShowLoot.groupColor, l.who ) 
 				end
 			end
 			
@@ -167,9 +152,9 @@ function CDGSL:LootClosed(...)
 			end				
 			
 			if l.qty >= 0 then
-				msg = msg .. " " .. Color.Green3 .. l.qty .. "|r" .. " " .. l.val
+				msg = msg .. zo_strformat(" |c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
 			else
-				msg = msg .. " " .. Color.Red3 .. math.abs(l.qty) .. "|r" .. " " .. l.val
+				msg = msg .. zo_strformat(" |c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
 			end
 			
 			
@@ -198,7 +183,6 @@ function CDGSL:ReticleHiddenUpdate(_, hidden, ...)
 	if hidden then 
 		if not Player.isCrafting then
 			Player.LastLootName, _, _ = GetLootTargetInfo()
-			Player.LastLootName = CDGSL:StripControlCharacters(Player.LastLootName)
 		end
 	end
 end
@@ -216,7 +200,6 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 			-- nothing
 			--
 		else
-			itemName = CDGSL:StripControlCharacters(itemName)
 			List.push(Player.LootList, {who = GetUnitName("player"), qty = quantity, val = itemName})	
 		end
 	else	  
@@ -229,10 +212,7 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 			--
 			-- nothing
 			--
-		else
-			lootedBy = CDGSL:StripControlCharacters(lootedBy)
-			itemName = CDGSL:StripControlCharacters(itemName)
-
+		else			
 			List.push(Player.LootList, {who = lootedBy, qty = quantity, val = itemName})
 				
 			CDGSL:SetDelayedLootUpdate()
@@ -287,7 +267,6 @@ function CDGSL:CraftCompleted(...)
 			-- Do Nothing
 			--
 			else		
-				itemLink = CDGSL:StripControlCharacters(itemLink)
 				List.push(Player.LootList, {who = GetUnitName("player"),qty = quantity, val = itemLink})
 			end
 		end
@@ -308,6 +287,18 @@ end
 function CDGSL:QuestRemoved(isCompleted, ...)
 	if isCompleted then
 		CDGSL:LootClosed()
+	end
+end
+
+function CDGSL:EVENT_ACTION_LAYER_PUSHED(eventCode, layerIndex, activeLayerIndex)
+	if layerIndex ~= 6 and CDGLibGui.isHiddenInDialogs() then
+		CDGLibGui.Hide()
+	end
+end
+
+function CDGSL:EVENT_ACTION_LAYER_POPPED(eventCode, layerIndex, activeLayerIndex)
+	if layerIndex == 6 then
+		CDGLibGui.Show()
 	end
 end
 
@@ -333,6 +324,8 @@ function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) CDGSL:MoneyUpdate(...) end )
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ACTION_LAYER_PUSHED, function(...) CDGSL:EVENT_ACTION_LAYER_PUSHED(...) end )	
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ACTION_LAYER_POPPED, function(...) CDGSL:EVENT_ACTION_LAYER_POPPED(...) end )	
     end
 end
 
@@ -344,13 +337,8 @@ function CDGSL:sendMessage(message)
 end
 
 local function RGBtoHEX(r,g,b,a)
-	local hex = ""
-	--if a then
 	--	hex = string.format("%.2x%.2x%.2x%.2x", math.floor(a * 255),math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
-	--else
-		hex = string.format("%.2x%.2x%.2x", math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
-	--end
-	return hex
+	return string.format("%.2x%.2x%.2x", math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
 end
 
 local function HEXtoRGB(hex)
@@ -379,6 +367,7 @@ function CDGSL:InitializeLAMSettings()
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideBG", "Hide the background", nil, function() return CDGLibGui.isBackgroundHidden() end, function(...) CDGLibGui.setBackgroundHidden(...) end,  true, "Without background you can not resize or move the window.")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideInDialog", "Hide when in dialog", nil, function() return CDGLibGui.isHiddenInDialogs() end, function(...) CDGLibGui.HideInDialogs(...) end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
 	LAM:AddSlider(panelID, lamID.."Slider".."TTTFO", "Time till text fades out", nil, 0, 10, 1, function(...) return CDGLibGui.getTimeTillLineFade() end, function(...) CDGLibGui.setTimeTillLineFade(...) end, true, "Text will not fade out when set at 0")
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)

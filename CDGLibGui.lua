@@ -15,7 +15,8 @@ CDGLibGui = {
 		general = {
 			isMovable = true,
 			isHidden = false,
-			isBackgroundHidden = false
+			isBackgroundHidden = false,
+			hideInDialogs = true,
 		},
 		anchor = {
 			point = TOPLEFT,
@@ -59,9 +60,9 @@ function CDGLibGui.CreateWindow( )
 		else
 			CDGLibGui.window.ID:SetResizeHandleSize(8)
 		end
-		CDGLibGui.window.ID:SetDrawLevel(0)
-		CDGLibGui.window.ID:SetDrawLayer(0)
-		CDGLibGui.window.ID:SetDrawTier(0)
+		CDGLibGui.window.ID:SetDrawLevel(DL_BELOW) -- Set the order where it is drawn, higher is more in background ???
+		CDGLibGui.window.ID:SetDrawLayer(DL_BACKGROUND)
+		CDGLibGui.window.ID:SetDrawTier(DT_MEDIUM)
 		CDGLibGui.window.ID:SetAnchor(
 			savedVars_CDGlibGui.anchor.point, 
 			savedVars_CDGlibGui.anchor.relativeTo, 
@@ -216,6 +217,24 @@ end
 
 function CDGLibGui.isMovable()
 	return savedVars_CDGlibGui.general.isMovable
+end
+
+function CDGLibGui.Hide()
+	CDGLibGui.window.ID:SetHidden(true)
+end
+
+function CDGLibGui.Show()
+	if not savedVars_CDGlibGui.general.isHidden then
+		CDGLibGui.window.ID:SetHidden(false)
+	end
+end
+
+function CDGLibGui.HideInDialogs(value)
+	savedVars_CDGlibGui.general.hideInDialogs = value
+end
+
+function CDGLibGui.isHiddenInDialogs()
+	return savedVars_CDGlibGui.general.hideInDialogs
 end
 
 function CDGLibGui.setHidden(value)
