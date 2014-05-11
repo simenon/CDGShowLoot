@@ -50,7 +50,7 @@ local savedVars_CDGLibGui = {}
 
 function CDGLibGui.CreateWindow( )
 	if CDGLibGui.window.ID == nil then
-		CDGLibGui.window.ID = WINDOW_MANAGER:CreateTopLevelWindow(nil)
+		CDGLibGui.window.ID = WINDOW_MANAGER:CreateTopLevelWindow("CDGLG_TLW")
 		CDGLibGui.window.ID:SetAlpha(savedVars_CDGlibGui.maxAlpha)
 		CDGLibGui.window.ID:SetMouseEnabled(true)		
 		CDGLibGui.window.ID:SetMovable( savedVars_CDGlibGui.general.isMovable )
@@ -148,11 +148,12 @@ function CDGLibGui.CreateWindow( )
 		-- If the loot window is hidden do not add it to the scene manager (it would pop up back otherwise)
 		-- If we dont want to hide in dialogs, dont add it to the scene manager
 		--
-		if not savedVars_CDGlibGui.general.isHidden and savedVars_CDGlibGui.general.hideInDialogs then
-			local fragment = ZO_FadeSceneFragment:New( CDGLibGui.window.ID )	
-			SCENE_MANAGER:GetScene('hud'):AddFragment( fragment )	
-			SCENE_MANAGER:GetScene('hudui'):AddFragment( fragment )
-		end
+		--local fragment = ZO_FadeSceneFragment:New( CDGLibGui.window.ID )
+
+		--if not savedVars_CDGlibGui.general.isHidden and savedVars_CDGlibGui.general.hideInDialogs then
+		--	SCENE_MANAGER:GetScene('hud'):AddFragment( fragment )	
+		--	SCENE_MANAGER:GetScene('hudui'):AddFragment( fragment )
+		--end
 	end
 end
 

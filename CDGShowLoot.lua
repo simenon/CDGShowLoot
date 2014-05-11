@@ -301,6 +301,7 @@ function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
 		CDGLibGui.initializeSavedVariable()		
 		CDGLibGui.CreateWindow()		
+		CDGSL:SetPreHooks()
 		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.5|r Loaded")
 
 		CDGSL:InitializeLAMSettings()
@@ -351,6 +352,45 @@ local function HEXtoRGB(hex)
         return r, g, b, a
     end
 	
+end
+
+function CDGSL:HideIfVisible()
+	if CDGLibGui.isHiddenInDialogs() then
+		CDGLibGui.Hide()
+	end
+end
+
+function CDGSL:ShowIfVisible()
+	if CDGLibGui.isHiddenInDialogs() then
+		CDGLibGui.Show()
+	end
+end
+
+function CDGSL:SetPreHooks()
+	ZO_PreHookHandler(ZO_GameMenu_InGame, "OnShow", function()
+        CDGSL:HideIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_GameMenu_InGame, "OnHide", function()
+        CDGSL:ShowIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_InteractWindow, "OnShow", function()
+        CDGSL:HideIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_InteractWindow, "OnHide", function()
+        CDGSL:ShowIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_KeybindStripControl, "OnShow", function()
+        CDGSL:HideIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_KeybindStripControl, "OnHide", function()
+        CDGSL:ShowIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_MainMenuCategoryBar, "OnShow", function()
+        CDGSL:HideIfVisible()
+    end)
+    ZO_PreHookHandler(ZO_MainMenuCategoryBar, "OnHide", function()
+        CDGSL:ShowIfVisible()
+    end)
 end
 
 function CDGSL:InitializeLAMSettings()
