@@ -301,7 +301,7 @@ function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
 		CDGLibGui.initializeSavedVariable()		
 		CDGLibGui.CreateWindow()		
-		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.4|r Loaded")
+		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.5|r Loaded")
 
 		CDGSL:InitializeLAMSettings()
 
