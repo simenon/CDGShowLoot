@@ -5,10 +5,12 @@
 ## SavedVariables: CDGShowLoot_SavedVariables 
 ## SavedVariables: CDGLibGui_SavedVariables
 ## OptionalDependsOn: LibAddonMenu-1.0
+## OptionalDependsOn: LibMediaProvider-1.0
 ## OptionalDependsOn: LibStub
 
 LibStub\LibStub.lua
 LibAddonMenu-1.0\LibAddonMenu-1.0.lua
+LibMediaProvider-1.0\LibMediaProvider-1.0.lua
 CDGLibGui.lua
 CDGShowLoot.lua
 CDGShowLoot.xml

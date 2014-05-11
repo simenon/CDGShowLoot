@@ -1,4 +1,5 @@
 local LAM = LibStub:GetLibrary("LibAddonMenu-1.0")
+local LMP = LibStub:GetLibrary("LibMediaProvider-1.0")
 local CDGSL = ZO_Object:Subclass()
 
 local Player = { 
@@ -15,7 +16,8 @@ local COLOR = {
 local localVars = {
 	defaults = {	
 		filter = {
-			gold = false,	
+			gold = false,
+			minGold = 0,	
 			self = {
 				JUNK = false,
 				NORMAL = false,
@@ -179,7 +181,7 @@ function CDGSL:ChatterEnd(...)
 end
 
 
-function CDGSL:ReticleHiddenUpdate(_, hidden, ...)
+function CDGSL:ReticleHiddenUpdate(_, hidden, ...)	
 	if hidden then 
 		if not Player.isCrafting then
 			Player.LastLootName, _, _ = GetLootTargetInfo()
@@ -222,7 +224,10 @@ end
 
 function CDGSL:MoneyUpdate(_, newMoney, oldMoney,...) 
 	if not savedVars_CDGShowLoot.filter.gold then
-		List.push(Player.LootList, {who = GetUnitName("player"), qty = (newMoney - oldMoney), val = "gold"})
+		local goldDiff = newMoney - oldMoney
+		if goldDiff < 0 or goldDiff > savedVars_CDGShowLoot.filter.minGold then
+			List.push(Player.LootList, {who = GetUnitName("player"), qty = (newMoney - oldMoney), val = "gold"})
+		end
 	end
 end
 
@@ -313,6 +318,8 @@ function CDGSL:AddonLoaded(eventCode, addOnName, ...)
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) CDGSL:MoneyUpdate(...) end )
 		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
+
+
     end
 end
 
@@ -349,19 +356,27 @@ end
 function CDGSL:InitializeLAMSettings()
 	local lamID = "CDGShowLootLAM"
 	local panelID = LAM:CreateControlPanel(lamID, "CDG Show Loot")
+	--
+	-- General Options
+	--
 	LAM:AddHeader(panelID, lamID.."Header".."GO", "General Options")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to main chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideBG", "Hide the background", nil, function() return CDGLibGui.isBackgroundHidden() end, function(...) CDGLibGui.setBackgroundHidden(...) end,  true, "Without background you can not resize or move the window.")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideInDialog", "Hide when in dialog", nil, function() return CDGLibGui.isHiddenInDialogs() end, function(...) CDGLibGui.HideInDialogs(...) end,  true, "only takes effect after /reloadui")
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideInDialog", "Hide when in dialog", nil, function() return CDGLibGui.isHiddenInDialogs() end, function(...) CDGLibGui.HideInDialogs(...) end,  true, "Reload UI")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
+	LAM:AddSlider(panelID, lamID.."Slider".."minGold", "Minimal gold to display", nil, 0, 500, 1, function(...) return savedVars_CDGShowLoot.filter.minGold end, function(value) savedVars_CDGShowLoot.filter.minGold = value end, true, "Text will not fade out when set at 0")
 	LAM:AddSlider(panelID, lamID.."Slider".."TTTFO", "Time till text fades out", nil, 0, 10, 1, function(...) return CDGLibGui.getTimeTillLineFade() end, function(...) CDGLibGui.setTimeTillLineFade(...) end, true, "Text will not fade out when set at 0")
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Group", "Group Color", nil,  function() return HEXtoRGB(savedVars_CDGShowLoot.groupColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.groupColor = RGBtoHEX(r,g,b,a) end, false, nil)
+	--
+	-- Font Settings
+	--
 	LAM:AddHeader(panelID, lamID.."Header".."FS", "Font Settings")
-	LAM:AddSlider(panelID, lamID.."Slider", "Font Size", nil, 10, 30, 1, function(...) return CDGLibGui.getFontSize() end, function(...) CDGLibGui.setFontSize(...) end, false, nil)
-	LAM:AddDropdown(panelID, lamID.."Dropdown", "Font Style", nil, CDGLibGui.fontstyles, function(...) return CDGLibGui.getFontStyle() end, function(...) return CDGLibGui.setFontStyle(...) end, false, nil)
+	LAM:AddDropdown(panelID, lamID.."Dropdown" .."Font", "Font", nil, LMP:List("font"), function(...) return CDGLibGui.getDefaultFont() end, function(...) return CDGLibGui.setDefaultFont(...) end, true, "Reload UI")
+	LAM:AddSlider(panelID, lamID.."Slider", "Font Size", nil, 10, 30, 1, function(...) return CDGLibGui.getFontSize() end, function(...) CDGLibGui.setFontSize(...) end, true, "Reload UI")
+	LAM:AddDropdown(panelID, lamID.."Dropdown", "Font Style", nil, CDGLibGui.fontstyles, function(...) return CDGLibGui.getFontStyle() end, function(...) return CDGLibGui.setFontStyle(...) end, true, "Reload UI")
 	LAM:AddHeader(panelID, lamID.."Header".."PLS", "Personal Loot Filters")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Junk",      "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.JUNK end,      function(value) savedVars_CDGShowLoot.filter.self.JUNK = value end, false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Normal",    "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", function() return savedVars_CDGShowLoot.filter.self.NORMAL end,    function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, false, nil)

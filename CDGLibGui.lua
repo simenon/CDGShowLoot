@@ -1,3 +1,4 @@
+local LMP = LibStub:GetLibrary("LibMediaProvider-1.0")
 local CDGLG = ZO_Object:Subclass()
 
 CDGLibGui = { 
@@ -30,7 +31,7 @@ CDGLibGui = {
 			height = 264
 		},
 		font = {
-			name = "EsoUi/Common/Fonts/Univers57.otf",
+			name = LMP:HashTable("font")["Univers 57"],
 			height = "14",
 			style = ""
 		},
@@ -143,8 +144,11 @@ function CDGLibGui.CreateWindow( )
 		CDGLibGui.window.ID:SetHandler( "OnMouseWheel", function(self, ...)  
 			CDGLibGui.window.TEXTBUFFER:MoveScrollPosition(...) 
 		end )
-
-		if savedVars_CDGlibGui.general.hideInDialogs then
+		--
+		-- If the loot window is hidden do not add it to the scene manager (it would pop up back otherwise)
+		-- If we dont want to hide in dialogs, dont add it to the scene manager
+		--
+		if not savedVars_CDGlibGui.general.isHidden and savedVars_CDGlibGui.general.hideInDialogs then
 			local fragment = ZO_FadeSceneFragment:New( CDGLibGui.window.ID )	
 			SCENE_MANAGER:GetScene('hud'):AddFragment( fragment )	
 			SCENE_MANAGER:GetScene('hudui'):AddFragment( fragment )
@@ -253,9 +257,20 @@ function CDGLibGui.isHidden()
 	return savedVars_CDGlibGui.general.isHidden
 end
 
+function CDGLibGui.getDefaultFont()
+	for i,v in pairs(LMP:HashTable("font")) do
+		if v == savedVars_CDGlibGui.font.name then
+			return i
+		end
+	end
+end
+
+function CDGLibGui.setDefaultFont(value)
+	savedVars_CDGlibGui.font.name = LMP:HashTable("font")[value]
+end
+
 function CDGLibGui.setFontSize(value)
 	savedVars_CDGlibGui.font.height = value
-	CDGLibGui.addMessage("Font size changed, please do a /reloadui")
 end
 
 function CDGLibGui.getFontSize()
@@ -272,7 +287,6 @@ end
 
 function CDGLibGui.setFontStyle(value)
 	savedVars_CDGlibGui.font.style = value
-	CDGLibGui.addMessage("Font style changed, please do a /reloadui")
 end
 
 function CDGLibGui.addMessage(message)
@@ -282,7 +296,7 @@ function CDGLibGui.addMessage(message)
 end
 
 function CDGLibGui.initializeSavedVariable()
-	savedVars_CDGlibGui = ZO_SavedVars:New("CDGLibGui_SavedVariables", 2, nil, CDGLibGui.defaults)
+	savedVars_CDGlibGui = ZO_SavedVars:New("CDGLibGui_SavedVariables", 1, nil, CDGLibGui.defaults)
 end
 
 function addDebugMessage(message)	
