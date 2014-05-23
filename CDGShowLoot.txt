@@ -1,7 +1,8 @@
-## APIVersion: 100003
-## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.5|r
-## Version: 2.5
+## APIVersion: 100004
+## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.6|r
+## Version: 2.6
 ## Author: CrazyDutchGuy
+## Description: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.6|r is an ingame loot display addon that can log received loot to the default chat window, or to a separate log window.
 ## SavedVariables: CDGShowLoot_SavedVariables 
 ## SavedVariables: CDGLibGui_SavedVariables
 ## OptionalDependsOn: LibAddonMenu-1.0

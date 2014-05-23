@@ -149,11 +149,12 @@ function CDGLibGui.CreateWindow( )
 		-- If we dont want to hide in dialogs, dont add it to the scene manager
 		--
 		--local fragment = ZO_FadeSceneFragment:New( CDGLibGui.window.ID )
+		local fragment = ZO_SimpleSceneFragment:New( CDGLibGui.window.ID )
 
-		--if not savedVars_CDGlibGui.general.isHidden and savedVars_CDGlibGui.general.hideInDialogs then
-		--	SCENE_MANAGER:GetScene('hud'):AddFragment( fragment )	
-		--	SCENE_MANAGER:GetScene('hudui'):AddFragment( fragment )
-		--end
+		if not savedVars_CDGlibGui.general.isHidden and savedVars_CDGlibGui.general.hideInDialogs then
+			SCENE_MANAGER:GetScene('hud'):AddFragment( fragment )	
+			SCENE_MANAGER:GetScene('hudui'):AddFragment( fragment )
+		end
 	end
 end
 

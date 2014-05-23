@@ -296,33 +296,7 @@ function CDGSL:QuestRemoved(isCompleted, ...)
 end
 
 
-function CDGSL:AddonLoaded(eventCode, addOnName, ...)
-	if(addOnName == "CDGShowLoot") then
-		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
-		CDGLibGui.initializeSavedVariable()		
-		CDGLibGui.CreateWindow()		
-		CDGSL:SetPreHooks()
-		CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.5|r Loaded")
 
-		CDGSL:InitializeLAMSettings()
-
-		Player.LootList = List.new()
-		--
-		-- No point starting these events earlier till the addon is fully loaded.
-		--
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFTING_STATION_INTERACT, function(...) CDGSL:CraftingStationInteract(...) end)
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_END_CRAFTING_STATION_INTERACT, function(...) CDGSL:EndCraftingStationInteract(...) end)
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFT_COMPLETED, function(...) CDGSL:CraftCompleted(...) end)
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_RETICLE_HIDDEN_UPDATE, function(...) CDGSL:ReticleHiddenUpdate(...) end)
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_CLOSED, function(...) CDGSL:LootClosed(...) end)	
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CHATTER_END, function(...) CDGSL:ChatterEnd(...) end)
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) CDGSL:MoneyUpdate(...) end )
-		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
-
-
-    end
-end
 
 function CDGSL:sendMessage(message)
 	if savedVars_CDGShowLoot.logToDefaultChat then
@@ -433,6 +407,41 @@ function CDGSL:InitializeLAMSettings()
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Legendary", "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", function() return savedVars_CDGShowLoot.filter.group.LEGENDARY end, function(value) savedVars_CDGShowLoot.filter.group.LEGENDARY = value end, false, nil)
 end
 
+function CDGSL:EVENT_ADD_ON_LOADED(eventCode, addOnName, ...)
+	if(addOnName == "CDGShowLoot") then
+		savedVars_CDGShowLoot = ZO_SavedVars:New("CDGShowLoot_SavedVariables", 2, nil, localVars.defaults)
+		CDGLibGui.initializeSavedVariable()		
+		CDGLibGui.CreateWindow()						
+
+		CDGSL:InitializeLAMSettings()
+
+		Player.LootList = List.new()
+		--
+		-- No point starting these events earlier till the addon is fully loaded.
+		--
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFTING_STATION_INTERACT, function(...) CDGSL:CraftingStationInteract(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_END_CRAFTING_STATION_INTERACT, function(...) CDGSL:EndCraftingStationInteract(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CRAFT_COMPLETED, function(...) CDGSL:CraftCompleted(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_RETICLE_HIDDEN_UPDATE, function(...) CDGSL:ReticleHiddenUpdate(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_CLOSED, function(...) CDGSL:LootClosed(...) end)	
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_CHATTER_END, function(...) CDGSL:ChatterEnd(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_QUEST_REMOVED, function(...) CDGSL:QuestRemoved(...) end)
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_MONEY_UPDATE, function(...) CDGSL:MoneyUpdate(...) end )
+		EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_LOOT_RECEIVED, function(...) CDGSL:LootReceived(...) end)	
+
+		EVENT_MANAGER:UnregisterForEvent( "CDGShowLoot", EVENT_ADD_ON_LOADED )	
+    end
+end
+
+function CDGSL:EVENT_PLAYER_ACTIVATED()
+	CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.7|r Loaded")
+	--
+	-- Only once so unreg is from further events
+	--
+	EVENT_MANAGER:UnregisterForEvent( "CDGShowLoot", EVENT_PLAYER_ACTIVATED )	
+end
+
 function CDGSL_OnInitialized()
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:AddonLoaded(...) end )	
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:EVENT_ADD_ON_LOADED(...) end )
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_PLAYER_ACTIVATED, function(...) CDGSL:EVENT_PLAYER_ACTIVATED(...) end)	
 end
