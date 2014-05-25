@@ -37,7 +37,10 @@ local localVars = {
 		},
 		playerColor = "4C4CFF",
 		groupColor = "4C4CFF",
-		logToDefaultChat = false
+		logToDefaultChat = false,
+		chatWindow = nil,
+		chatContainerId = nil,
+		chatWindowId = nil
 	}
 }
 
@@ -295,12 +298,36 @@ function CDGSL:QuestRemoved(isCompleted, ...)
 	end
 end
 
+local function getChatWindows()
+	windows  = {}
+	index = 1
+	for i = 1, GetNumChatContainers() do
+		for j = 1, GetNumChatContainerTabs(i) do
+			name,_,_,_,_ = GetChatContainerTabInfo(i, j)
+			windows[index] = i.."."..j.." "..name
+			index = index + 1
+		end
+	end
+	return windows
+end
 
+local function getChatWindow()
+	return savedVars_CDGShowLoot.chatWindow
+end
 
+local function setChatWindow(value)
+	savedVars_CDGShowLoot.chatWindow = value
+	savedVars_CDGShowLoot.chatContainerId = tonumber(string.sub(savedVars_CDGShowLoot.chatWindow,1,1))
+	savedVars_CDGShowLoot.chatWindowId = tonumber(string.sub(savedVars_CDGShowLoot.chatWindow,3,3))
+end
 
 function CDGSL:sendMessage(message)
 	if savedVars_CDGShowLoot.logToDefaultChat then
-		d(message)
+		if savedVars_CDGShowLoot.chatWindow then
+			CHAT_SYSTEM["containers"][savedVars_CDGShowLoot.chatContainerId]["windows"][savedVars_CDGShowLoot.chatWindowId]["buffer"]:AddMessage(message)
+		else
+			CHAT_SYSTEM:AddMessage(message)
+		end
 	end
 	CDGLibGui.addMessage(message)
 end
@@ -374,7 +401,8 @@ function CDGSL:InitializeLAMSettings()
 	-- General Options
 	--
 	LAM:AddHeader(panelID, lamID.."Header".."GO", "General Options")
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to main chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to eso chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
+	LAM:AddDropdown(panelID, lamID.."DropdownChatWindow", "Chat Window", nil, getChatWindows(), function(...) return getChatWindow() end, function(...) return setChatWindow(...) end, false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideBG", "Hide the background", nil, function() return CDGLibGui.isBackgroundHidden() end, function(...) CDGLibGui.setBackgroundHidden(...) end,  true, "Without background you can not resize or move the window.")
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
@@ -434,10 +462,10 @@ function CDGSL:EVENT_ADD_ON_LOADED(eventCode, addOnName, ...)
 end
 
 function CDGSL:EVENT_PLAYER_ACTIVATED()
-	CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot |c0066992.7|r Loaded")
+	CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot Loaded")
 	--
 	-- Only once so unreg is from further events
-	--
+	--	
 	EVENT_MANAGER:UnregisterForEvent( "CDGShowLoot", EVENT_PLAYER_ACTIVATED )	
 end
 
