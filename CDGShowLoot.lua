@@ -40,7 +40,9 @@ local localVars = {
 		logToDefaultChat = false,
 		chatWindow = nil,
 		chatContainerId = nil,
-		chatWindowId = nil
+		chatWindowId = nil,
+		hidePlayerName = false,
+		hideTimeStamps = false
 	}
 }
 
@@ -135,10 +137,13 @@ function CDGSL:LootClosed(...)
 			
 
 			if msg == "" then 
+
 				if GetUnitName("player") == l.who then
-					msg = msg .. zo_strformat("|c<<1>> <<2>>|r", savedVars_CDGShowLoot.playerColor, l.who ) 					
+					if not savedVars_CDGShowLoot.hidePlayerName then
+						msg = msg .. zo_strformat("|c<<1>> <<2>>|r ", savedVars_CDGShowLoot.playerColor, l.who ) 					
+					end
 				else
-					msg = msg .. zo_strformat("|c<<1>> <<2>>|r", savedVars_CDGShowLoot.groupColor, l.who ) 
+					msg = msg .. zo_strformat("|c<<1>> <<2>>|r ", savedVars_CDGShowLoot.groupColor, l.who ) 
 				end
 			end
 			
@@ -157,9 +162,9 @@ function CDGSL:LootClosed(...)
 			end				
 			
 			if l.qty >= 0 then
-				msg = msg .. zo_strformat(" |c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
+				msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
 			else
-				msg = msg .. zo_strformat(" |c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
+				msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
 			end
 			
 			
@@ -410,6 +415,8 @@ function CDGSL:InitializeLAMSettings()
 	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
 	LAM:AddSlider(panelID, lamID.."Slider".."minGold", "Minimal gold to display", nil, 0, 500, 1, function(...) return savedVars_CDGShowLoot.filter.minGold end, function(value) savedVars_CDGShowLoot.filter.minGold = value end, true, "Text will not fade out when set at 0")
 	LAM:AddSlider(panelID, lamID.."Slider".."TTTFO", "Time till text fades out", nil, 0, 10, 1, function(...) return CDGLibGui.getTimeTillLineFade() end, function(...) CDGLibGui.setTimeTillLineFade(...) end, true, "Text will not fade out when set at 0")
+	--LAM:AddCheckbox(panelID, lamID.."CheckBox".."hideTimeStamps", "Hide timestamps", nil, function() return savedVars_CDGShowLoot.hideTimeStamps end, function(value) savedVars_CDGShowLoot.hideTimeStamps = value end,  false, nil)
+	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HidePlayerName", "Hide player name", nil, function() return savedVars_CDGShowLoot.hidePlayerName end, function(value) savedVars_CDGShowLoot.hidePlayerName = value end,  false, nil)
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)
 	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Group", "Group Color", nil,  function() return HEXtoRGB(savedVars_CDGShowLoot.groupColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.groupColor = RGBtoHEX(r,g,b,a) end, false, nil)
 	--
