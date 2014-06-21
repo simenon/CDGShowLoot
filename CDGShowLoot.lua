@@ -161,12 +161,13 @@ function CDGSL:LootClosed(...)
 				
 			end				
 			
-			if l.qty >= 0 then
-				msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
-			else
-				msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
+			if l.val ~= gold or (l.val == "gold" and (l.qty < 0 or l.qty > savedVars_CDGShowLoot.filter.minGold)) then
+				if l.qty >= 0 then
+					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
+				else
+					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
+				end
 			end
-			
 			
 			if not List.empty(Player.LootList) and l.who == l_peek.who then
 				msg = msg .. ","
@@ -232,10 +233,7 @@ end
 
 function CDGSL:MoneyUpdate(_, newMoney, oldMoney,...) 
 	if not savedVars_CDGShowLoot.filter.gold then
-		local goldDiff = newMoney - oldMoney
-		if goldDiff < 0 or goldDiff > savedVars_CDGShowLoot.filter.minGold then
-			List.push(Player.LootList, {who = GetUnitName("player"), qty = (newMoney - oldMoney), val = "gold"})
-		end
+		List.push(Player.LootList, {who = GetUnitName("player"), qty = (newMoney - oldMoney), val = "gold"})
 	end
 end
 
@@ -326,7 +324,7 @@ local function setChatWindow(value)
 	savedVars_CDGShowLoot.chatWindowId = tonumber(string.sub(savedVars_CDGShowLoot.chatWindow,3,3))
 end
 
-function CDGSL:sendMessage(message)
+function CDGSL:sendMessage(message)	
 	if savedVars_CDGShowLoot.logToDefaultChat then
 		if savedVars_CDGShowLoot.chatWindow then
 			CHAT_SYSTEM["containers"][savedVars_CDGShowLoot.chatContainerId]["windows"][savedVars_CDGShowLoot.chatWindowId]["buffer"]:AddMessage(message)
@@ -468,15 +466,6 @@ function CDGSL:EVENT_ADD_ON_LOADED(eventCode, addOnName, ...)
     end
 end
 
-function CDGSL:EVENT_PLAYER_ACTIVATED()
-	CDGSL:sendMessage("|cFF2222CrazyDutchGuy's|r Show Loot Loaded")
-	--
-	-- Only once so unreg is from further events
-	--	
-	EVENT_MANAGER:UnregisterForEvent( "CDGShowLoot", EVENT_PLAYER_ACTIVATED )	
-end
-
 function CDGSL_OnInitialized()
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:EVENT_ADD_ON_LOADED(...) end )
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_PLAYER_ACTIVATED, function(...) CDGSL:EVENT_PLAYER_ACTIVATED(...) end)	
+	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:EVENT_ADD_ON_LOADED(...) end )	
 end
