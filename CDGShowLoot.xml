@@ -1,0 +1,9 @@
+<GuiXml>
+    <Controls>
+        <TopLevelControl name="CDGShowLoot">
+            <OnInitialized>
+                CDGSL_OnInitialized()
+            </OnInitialized>
+        </TopLevelControl>
+    </Controls>
+</GuiXml>
