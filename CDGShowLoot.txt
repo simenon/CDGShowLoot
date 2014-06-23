@@ -1,17 +1,28 @@
 ## APIVersion: 100004
-## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.10|r
-## Version: 2.10
+## Title: |cFF2222CrazyDutchGuy's|r Show Loot |c0066992.11|r
+## Version: 2.11
 ## Author: CrazyDutchGuy
 ## Description: |cFF2222CrazyDutchGuy's Show Loot |r is an ingame loot display addon that can log received loot to the default chat window, or to a separate log window.
 ## SavedVariables: CDGShowLoot_SavedVariables 
 ## SavedVariables: CDGLibGui_SavedVariables
-## OptionalDependsOn: LibAddonMenu-1.0
-## OptionalDependsOn: LibMediaProvider-1.0
-## OptionalDependsOn: LibStub
+## OptionalDependsOn: LibStub LibMediaProvider-1.0 LibAddonMenu-2.0
 
-LibStub\LibStub.lua
-LibAddonMenu-1.0\LibAddonMenu-1.0.lua
-LibMediaProvider-1.0\LibMediaProvider-1.0.lua
+libs/LibStub/LibStub.lua
+libs/LibAddonMenu-2.0/LibAddonMenu-2.0.lua
+libs/LibAddonMenu-2.0/controls/panel.lua
+libs/LibAddonMenu-2.0/controls/submenu.lua
+libs/LibAddonMenu-2.0/controls/button.lua
+libs/LibAddonMenu-2.0/controls/checkbox.lua
+libs/LibAddonMenu-2.0/controls/colorpicker.lua
+libs/LibAddonMenu-2.0/controls/custom.lua
+libs/LibAddonMenu-2.0/controls/description.lua
+libs/LibAddonMenu-2.0/controls/dropdown.lua
+libs/LibAddonMenu-2.0/controls/editbox.lua
+libs/LibAddonMenu-2.0/controls/header.lua
+libs/LibAddonMenu-2.0/controls/slider.lua
+libs/LibAddonMenu-2.0/controls/texture.lua
+libs/LibMediaProvider-1.0/LibMediaProvider-1.0.lua
+
 CDGLibGui.lua
 CDGShowLoot.lua
 CDGShowLoot.xml

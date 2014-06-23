@@ -41,7 +41,8 @@ CDGLibGui = {
 		fadeOutDelay = 1000,
 		fadeDuration = 700,
 		lineFadeTime = 5,
-		lineFadeDuration = 3
+		lineFadeDuration = 3,
+		timestamp = true,
 	},
 	fadeOutCheckOnUpdate = nil
 }
@@ -291,9 +292,21 @@ function CDGLibGui.setFontStyle(value)
 	savedVars_CDGlibGui.font.style = value
 end
 
+function CDGLibGui.isTimestampEnabled()
+	return savedVars_CDGlibGui.timestamp
+end
+
+function CDGLibGui.setTimestampEnabled(value)
+	savedVars_CDGlibGui.timestamp = value
+end
+
 function CDGLibGui.addMessage(message)
-	if CDGLibGui.window.TEXTBUFFER ~= nil then		
-		CDGLibGui.window.TEXTBUFFER:AddMessage("|c909000[" .. GetTimeString() .. "]|r " .. message)
+	if CDGLibGui.window.TEXTBUFFER ~= nil then	
+		if CDGLibGui.isTimestampEnabled() then
+			CDGLibGui.window.TEXTBUFFER:AddMessage("|c909000[" .. GetTimeString() .. "]|r " .. message)
+		else
+			CDGLibGui.window.TEXTBUFFER:AddMessage(message)
+		end
 	end
 end
 

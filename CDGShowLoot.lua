@@ -1,6 +1,14 @@
-local LAM = LibStub:GetLibrary("LibAddonMenu-1.0")
+local LAM2 = LibStub:GetLibrary("LibAddonMenu-2.0")
 local LMP = LibStub:GetLibrary("LibMediaProvider-1.0")
 local CDGSL = ZO_Object:Subclass()
+
+local Addon =
+{
+    Name = "CDGShowLoot",
+    NameSpaced = "CDG Show Loot",
+    Author = "CrazyDutchGuy",
+    Version = "2.11",
+}
 
 local Player = { 
 	isCrafting = false,
@@ -41,8 +49,8 @@ local localVars = {
 		chatWindow = nil,
 		chatContainerId = nil,
 		chatWindowId = nil,
-		hidePlayerName = false,
-		hideTimeStamps = false
+		hidePlayerName = false,		
+		showBagStacks = true,
 	}
 }
 
@@ -166,6 +174,19 @@ function CDGSL:LootClosed(...)
 					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
 				else
 					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
+				end
+
+				if savedVars_CDGShowLoot.showBagStacks and l.val ~= "gold" and GetUnitName("player") == l.who then
+					local amount = 0
+					local _, bagSlots = GetBagInfo(BAG_BACKPACK)
+					for bagSlot = 0, bagSlots do
+						local bagItemLink = GetItemLink(BAG_BACKPACK, bagSlot, LINK_STYLE_DEFAULT)
+						local bagStack,bagMaxStack = GetSlotStackSize(BAG_BACKPACK, bagSlot)
+						if l.val == bagItemLink then
+							amount = amount + bagStack
+						end
+					end
+					msg = msg .. " |cC3C3C3["..amount.."]|r"
 				end
 
 				if not List.empty(Player.LootList) and l.who == l_peek.who then
@@ -399,48 +420,60 @@ function CDGSL:SetPreHooks()
     end)
 end
 
-function CDGSL:InitializeLAMSettings()
-	local lamID = "CDGShowLootLAM"
-	local panelID = LAM:CreateControlPanel(lamID, "CDG Show Loot")
-	--
-	-- General Options
-	--
-	LAM:AddHeader(panelID, lamID.."Header".."GO", "General Options")
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."LogDefault", "Log to eso chat window", nil, function() return savedVars_CDGShowLoot.logToDefaultChat end, function(value) savedVars_CDGShowLoot.logToDefaultChat = value end,  false, nil)
-	LAM:AddDropdown(panelID, lamID.."DropdownChatWindow", "Chat Window", nil, getChatWindows(), function(...) return getChatWindow() end, function(...) return setChatWindow(...) end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Move", "Move the loot window", nil, function() return CDGLibGui.isMovable() end, function(...) CDGLibGui.setMovable(...) end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideBG", "Hide the background", nil, function() return CDGLibGui.isBackgroundHidden() end, function(...) CDGLibGui.setBackgroundHidden(...) end,  true, "Without background you can not resize or move the window.")
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Hide", "Hide the loot window", nil, function() return CDGLibGui.isHidden() end, function(...) CDGLibGui.setHidden(...) end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HideInDialog", "Hide when in dialog", nil, function() return CDGLibGui.isHiddenInDialogs() end, function(...) CDGLibGui.HideInDialogs(...) end,  true, "Reload UI")
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."Gold", "Filter Gold", nil, function() return savedVars_CDGShowLoot.filter.gold end, function(value) savedVars_CDGShowLoot.filter.gold = value end,  false, nil)
-	LAM:AddSlider(panelID, lamID.."Slider".."minGold", "Minimal gold to display", nil, 0, 500, 1, function(...) return savedVars_CDGShowLoot.filter.minGold end, function(value) savedVars_CDGShowLoot.filter.minGold = value end, true, "Text will not fade out when set at 0")
-	LAM:AddSlider(panelID, lamID.."Slider".."TTTFO", "Time till text fades out", nil, 0, 10, 1, function(...) return CDGLibGui.getTimeTillLineFade() end, function(...) CDGLibGui.setTimeTillLineFade(...) end, true, "Text will not fade out when set at 0")
-	--LAM:AddCheckbox(panelID, lamID.."CheckBox".."hideTimeStamps", "Hide timestamps", nil, function() return savedVars_CDGShowLoot.hideTimeStamps end, function(value) savedVars_CDGShowLoot.hideTimeStamps = value end,  false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."HidePlayerName", "Hide player name", nil, function() return savedVars_CDGShowLoot.hidePlayerName end, function(value) savedVars_CDGShowLoot.hidePlayerName = value end,  false, nil)
-	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Player", "Player Color", nil, function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, false, nil)
-	LAM:AddColorPicker(panelID, lamID.."ColorPicker".."Group", "Group Color", nil,  function() return HEXtoRGB(savedVars_CDGShowLoot.groupColor) end,  function(r,g,b,a) savedVars_CDGShowLoot.groupColor = RGBtoHEX(r,g,b,a) end, false, nil)
-	--
-	-- Font Settings
-	--
-	LAM:AddHeader(panelID, lamID.."Header".."FS", "Font Settings")
-	LAM:AddDropdown(panelID, lamID.."Dropdown" .."Font", "Font", nil, LMP:List("font"), function(...) return CDGLibGui.getDefaultFont() end, function(...) return CDGLibGui.setDefaultFont(...) end, true, "Reload UI")
-	LAM:AddSlider(panelID, lamID.."Slider", "Font Size", nil, 10, 30, 1, function(...) return CDGLibGui.getFontSize() end, function(...) CDGLibGui.setFontSize(...) end, true, "Reload UI")
-	LAM:AddDropdown(panelID, lamID.."Dropdown", "Font Style", nil, CDGLibGui.fontstyles, function(...) return CDGLibGui.getFontStyle() end, function(...) return CDGLibGui.setFontStyle(...) end, true, "Reload UI")
-	LAM:AddHeader(panelID, lamID.."Header".."PLS", "Personal Loot Filters")
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Junk",      "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.JUNK end,      function(value) savedVars_CDGShowLoot.filter.self.JUNK = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Normal",    "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", function() return savedVars_CDGShowLoot.filter.self.NORMAL end,    function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Fine",      "|c"..LOOTCOLOR.FINE.."Fine".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.FINE end,      function(value) savedVars_CDGShowLoot.filter.self.FINE = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Superior",  "|c"..LOOTCOLOR.SUPERIOR.."Superior".."|r",  "", function() return savedVars_CDGShowLoot.filter.self.SUPERIOR end,  function(value) savedVars_CDGShowLoot.filter.self.SUPERIOR = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Epic",      "|c"..LOOTCOLOR.EPIC.."Epic".."|r",          "", function() return savedVars_CDGShowLoot.filter.self.EPIC end,      function(value) savedVars_CDGShowLoot.filter.self.EPIC = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."self".."Legendary", "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", function() return savedVars_CDGShowLoot.filter.self.LEGENDARY end, function(value) savedVars_CDGShowLoot.filter.self.LEGENDARY = value end, false, nil)
-	LAM:AddHeader(panelID, lamID.."Header".."GLS", "Group Loot Filters")
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Junk",      "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", function() return savedVars_CDGShowLoot.filter.group.JUNK end,      function(value) savedVars_CDGShowLoot.filter.group.JUNK = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Normal",    "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", function() return savedVars_CDGShowLoot.filter.group.NORMAL end,    function(value) savedVars_CDGShowLoot.filter.group.NORMAL = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Fine",      "|c"..LOOTCOLOR.FINE.."Fine".."|r",          "", function() return savedVars_CDGShowLoot.filter.group.FINE end,      function(value) savedVars_CDGShowLoot.filter.group.FINE = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Superior",  "|c"..LOOTCOLOR.SUPERIOR.."Superior".."|r",  "", function() return savedVars_CDGShowLoot.filter.group.SUPERIOR end,  function(value) savedVars_CDGShowLoot.filter.group.SUPERIOR = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Epic",      "|c"..LOOTCOLOR.EPIC.."Epic".."|r",          "", function() return savedVars_CDGShowLoot.filter.group.EPIC end,      function(value) savedVars_CDGShowLoot.filter.group.EPIC = value end, false, nil)
-	LAM:AddCheckbox(panelID, lamID.."CheckBox".."group".."Legendary", "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", function() return savedVars_CDGShowLoot.filter.group.LEGENDARY end, function(value) savedVars_CDGShowLoot.filter.group.LEGENDARY = value end, false, nil)
-end
+local function createLAM2Panel()
+    local panelData = 
+    {
+        type = "panel",
+        name = Addon.NameSpaced,
+        displayName = "|cFFFFB0" .. Addon.NameSpaced .. "|r",
+        author = Addon.Author,
+        version = Addon.Version,        
+    }
+
+    local optionsData = 
+    {        
+        [1] = { type = "description", text = "|cFF2222CrazyDutchGuy's|r Show Loot is an addon that displays items looted in a optional loot window or a default chat window of your choice.", },
+        [2] = { type = "header", name = "General Options", },
+        [3] = { type = "checkbox", name = "Log to eso chat window", tooltip = "Log to eso chat window", getFunc = function() return savedVars_CDGShowLoot.logToDefaultChat end, setFunc = function(value) savedVars_CDGShowLoot.logToDefaultChat = value end, }, 
+        [4] = { type = "dropdown", name = "Chat Window", tooltip = "Chat window", choices = getChatWindows(), getFunc = function() return getChatWindow() end, setFunc = function(value) setChatWindow(value) end, },
+    	[5] = { type = "colorpicker", name = "Player Color", tooltip = "Player Color Name.", getFunc = function() return HEXtoRGB(savedVars_CDGShowLoot.playerColor) end, setFunc = function(r,g,b,a) savedVars_CDGShowLoot.playerColor = RGBtoHEX(r,g,b,a) end, },
+    	[6] = { type = "colorpicker", name = "Group Color", tooltip = "Group Players Color Name.", getFunc = function() return HEXtoRGB(savedVars_CDGShowLoot.groupColor) end, setFunc = function(r,g,b,a) savedVars_CDGShowLoot.groupColor = RGBtoHEX(r,g,b,a) end, },
+    	[7] = { type = "header", name = "Font Settings", },
+        [8] = { type = "dropdown", name = "Font Type", tooltip = "Font Type.", choices = LMP:List("font"), getFunc = function() return CDGLibGui.getDefaultFont() end, setFunc = function(value) CDGLibGui.setDefaultFont(value) end, warning = "Will need to reload the UI.", },
+    	[9] = { type = "slider", name = "Font Size", tooltip = "Font Size.", min = 10, max = 30, step = 1, getFunc = function() return CDGLibGui.getFontSize() end, setFunc = function(value) CDGLibGui.setFontSize(value) end, warning = "Will need to reload the UI.", },
+    	[10] = { type = "dropdown", name = "Font Style", tooltip = "Font Style.", choices = CDGLibGui.fontstyles, getFunc = function() return CDGLibGui.getFontStyle() end, setFunc = function(value) CDGLibGui.setFontStyle(value) end, warning = "Will need to reload the UI.", },
+    	[11] = { type = "header", name = "General Filters", },
+        [12] = { type = "checkbox", name = "Hide Gold Gains", tooltip = "Don't show gold gains.", getFunc = function() return savedVars_CDGShowLoot.filter.gold end, setFunc = function(value) savedVars_CDGShowLoot.filter.gold = value end, },
+        [13] = { type = "slider", name = "Minimal gold to display", tooltip = "Minimum amount of gold gain needed before displaying.", min = 0, max = 1000, step = 10, getFunc = function() return savedVars_CDGShowLoot.filter.minGold end, setFunc = function(value) savedVars_CDGShowLoot.filter.minGold = value end, },
+    	[14] = { type = "checkbox", name = "Hide player name", tooltip = "Don't show your own personal name when displaying loot", getFunc = function() return savedVars_CDGShowLoot.hidePlayerName end, setFunc = function(value) savedVars_CDGShowLoot.hidePlayerName = value end, },
+    	[15] = { type = "checkbox", name = "Show Bag Stacks", tooltip = "Show amount of items in your bag.", getFunc = function() return savedVars_CDGShowLoot.showBagStacks end, setFunc = function(value) savedVars_CDGShowLoot.showBagStacks = value end, },
+        [16] = { type = "header",   name = "Personal Loot Filters", },
+    	[17] = { type = "checkbox", name = "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.JUNK end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.JUNK = value end, },
+		[18] = { type = "checkbox", name = "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.NORMAL end,     setFunc = function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, },
+		[19] = { type = "checkbox", name = "|c"..LOOTCOLOR.FINE.."Fine".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.FINE end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.FINE = value end, },
+		[20] = { type = "checkbox", name = "|c"..LOOTCOLOR.SUPERIOR.."Superior".."|r",  "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.SUPERIOR end,   setFunc = function(value) savedVars_CDGShowLoot.filter.self.SUPERIOR = value end, },
+		[21] = { type = "checkbox", name = "|c"..LOOTCOLOR.EPIC.."Epic".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.EPIC end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.EPIC = value end, },
+		[22] = { type = "checkbox", name = "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.LEGENDARY end,  setFunc = function(value) savedVars_CDGShowLoot.filter.self.LEGENDARY = value end, },
+		[23] = { type = "header",   name = "Group Loot Filters", }, 
+    	[24] = { type = "checkbox", name = "|c"..LOOTCOLOR.JUNK.."Junk".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.JUNK end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.JUNK = value end, },
+		[25] = { type = "checkbox", name = "|c"..LOOTCOLOR.NORMAL.."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.NORMAL end,    setFunc = function(value) savedVars_CDGShowLoot.filter.group.NORMAL = value end, },
+		[26] = { type = "checkbox", name = "|c"..LOOTCOLOR.FINE.."Fine".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.FINE end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.FINE = value end, },
+		[27] = { type = "checkbox", name = "|c"..LOOTCOLOR.SUPERIOR.."Superior".."|r",  "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.SUPERIOR end,  setFunc = function(value) savedVars_CDGShowLoot.filter.group.SUPERIOR = value end, },
+		[28] = { type = "checkbox", name = "|c"..LOOTCOLOR.EPIC.."Epic".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.EPIC end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.EPIC = value end, },
+		[29] = { type = "checkbox", name = "|c"..LOOTCOLOR.LEGENDARY.."Legendary".."|r","", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.LEGENDARY end, setFunc = function(value) savedVars_CDGShowLoot.filter.group.LEGENDARY = value end, },
+    	[30] = { type = "header", name = "Optional Loot Window", },
+        [31] = { type = "checkbox", name = "Hide window", tooltip = "Hide the loot window.", getFunc = function() return CDGLibGui.isHidden() end, setFunc = function(value) CDGLibGui.setHidden(value) end, },
+        [32] = { type = "checkbox", name = "Hide window when in dialog", tooltip = "Hide the loot window when dialog windows are open.", getFunc = function() return CDGLibGui.isHiddenInDialogs() end, setFunc = function(value) CDGLibGui.HideInDialogs(value) end, },
+    	[33] = { type = "checkbox", name = "Unlock window", tooltip = "Unlock window to move it.", getFunc = function() return CDGLibGui.isMovable() end, setFunc = function(value) CDGLibGui.setMovable(value) end, },
+		[34] = { type = "checkbox", name = "Hide background", tooltip = "Hide the background of the window", getFunc = function() return CDGLibGui.isBackgroundHidden() end, setFunc = function(value) CDGLibGui.setBackgroundHidden(value) end, warning = "Background is needed to move window."},
+		[34] = { type = "checkbox", name = "Show timestamps", tooltip = "Show timestamps before message", getFunc = function() return CDGLibGui.isTimestampEnabled() end, setFunc = function(value) CDGLibGui.setTimestampEnabled(value) end, },
+        [35] = { type = "slider", name = "Time till text fades out", tooltip = "Time needed before ffading out.", min = 0, max = 10, step = 1, getFunc = function() return CDGLibGui.getTimeTillLineFade() end, setFunc = function(value) CDGLibGui.setTimeTillLineFade(value) end, },
+        
+    } 
+
+   	LAM2:RegisterAddonPanel(Addon.Name.."LAM2Options", panelData)    
+    LAM2:RegisterOptionControls(Addon.Name.."LAM2Options", optionsData)
+end 
 
 function CDGSL:EVENT_ADD_ON_LOADED(eventCode, addOnName, ...)
 	if(addOnName == "CDGShowLoot") then
@@ -448,7 +481,7 @@ function CDGSL:EVENT_ADD_ON_LOADED(eventCode, addOnName, ...)
 		CDGLibGui.initializeSavedVariable()		
 		CDGLibGui.CreateWindow()						
 
-		CDGSL:InitializeLAMSettings()
+		createLAM2Panel()
 
 		Player.LootList = List.new()
 		--
