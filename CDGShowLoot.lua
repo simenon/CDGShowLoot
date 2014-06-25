@@ -7,7 +7,7 @@ local Addon =
     Name = "CDGShowLoot",
     NameSpaced = "CDG Show Loot",
     Author = "CrazyDutchGuy",
-    Version = "2.11",
+    Version = "3.0",
 }
 
 local Player = { 
@@ -466,8 +466,8 @@ local function createLAM2Panel()
         [32] = { type = "checkbox", name = "Hide window when in dialog", tooltip = "Hide the loot window when dialog windows are open.", getFunc = function() return CDGLibGui.isHiddenInDialogs() end, setFunc = function(value) CDGLibGui.HideInDialogs(value) end, },
     	[33] = { type = "checkbox", name = "Unlock window", tooltip = "Unlock window to move it.", getFunc = function() return CDGLibGui.isMovable() end, setFunc = function(value) CDGLibGui.setMovable(value) end, },
 		[34] = { type = "checkbox", name = "Hide background", tooltip = "Hide the background of the window", getFunc = function() return CDGLibGui.isBackgroundHidden() end, setFunc = function(value) CDGLibGui.setBackgroundHidden(value) end, warning = "Background is needed to move window."},
-		[34] = { type = "checkbox", name = "Show timestamps", tooltip = "Show timestamps before message", getFunc = function() return CDGLibGui.isTimestampEnabled() end, setFunc = function(value) CDGLibGui.setTimestampEnabled(value) end, },
-        [35] = { type = "slider", name = "Time till text fades out", tooltip = "Time needed before ffading out.", min = 0, max = 10, step = 1, getFunc = function() return CDGLibGui.getTimeTillLineFade() end, setFunc = function(value) CDGLibGui.setTimeTillLineFade(value) end, },
+		[35] = { type = "checkbox", name = "Show timestamps", tooltip = "Show timestamps before message", getFunc = function() return CDGLibGui.isTimestampEnabled() end, setFunc = function(value) CDGLibGui.setTimestampEnabled(value) end, },
+        [36] = { type = "slider", name = "Time till text fades out", tooltip = "Time needed before ffading out.", min = 0, max = 10, step = 1, getFunc = function() return CDGLibGui.getTimeTillLineFade() end, setFunc = function(value) CDGLibGui.setTimeTillLineFade(value) end, },
         
     } 
 
