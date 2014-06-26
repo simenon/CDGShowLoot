@@ -7,7 +7,7 @@ local Addon =
     Name = "CDGShowLoot",
     NameSpaced = "CDG Show Loot",
     Author = "CrazyDutchGuy",
-    Version = "3.0",
+    Version = "3.1",
 }
 
 local Player = { 
@@ -62,6 +62,15 @@ local LOOTCOLOR = {
 	EPIC = "A02EF7",
 	LEGENDARY = "EECA2A"
 }
+
+local LOOTQUALITY = {
+	JUNK = 0,
+	NORMAL = 1,
+	FINE = 2,
+	SUPERIOR = 3,
+	EPIC = 4,
+	LEGENDARY = 5,
+} 
 
 local savedVars_CDGShowLoot = {}
 
@@ -171,9 +180,9 @@ function CDGSL:LootClosed(...)
 			
 			if l.val ~= "gold" or (l.val == "gold" and (l.qty < 0 or l.qty > savedVars_CDGShowLoot.filter.minGold)) then
 				if l.qty >= 0 then
-					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, l.qty, COLOR.GREEN   ) 
+					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>> |r <<t:1>>", l.val, l.qty, COLOR.GREEN, " "  ) 
 				else
-					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>>|r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED   ) 
+					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>> |r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED, " "   ) 
 				end
 
 				if savedVars_CDGShowLoot.showBagStacks and l.val ~= "gold" and GetUnitName("player") == l.who then
@@ -222,14 +231,22 @@ function CDGSL:ReticleHiddenUpdate(_, hidden, ...)
 end
 
 function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
-	local _, color, _ = ZO_LinkHandler_ParseLink (itemName)
+	local quality = nil
+	
+	for bagslot = 0, select(2, GetBagInfo(BAG_BACKPACK)) do
+		if itemName == GetItemLink(BAG_BACKPACK, bagslot) then
+			quality = select(8, GetItemInfo(BAG_BACKPACK, bagslot))
+			break
+		end				
+	end
+	
 	if self then	
-		if 	(savedVars_CDGShowLoot.filter.self.JUNK and (color == LOOTCOLOR.JUNK)) or 
-		   	(savedVars_CDGShowLoot.filter.self.NORMAL and (color == LOOTCOLOR.NORMAL)) or
-		   	(savedVars_CDGShowLoot.filter.self.FINE and (color == LOOTCOLOR.FINE)) or
-			(savedVars_CDGShowLoot.filter.self.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
-			(savedVars_CDGShowLoot.filter.self.EPIC and (color == LOOTCOLOR.EPIC)) or
-			(savedVars_CDGShowLoot.filter.self.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+		if 	(savedVars_CDGShowLoot.filter.self.JUNK and (quality == LOOTQUALITY.JUNK)) or 
+		   	(savedVars_CDGShowLoot.filter.self.NORMAL and (quality == LOOTQUALITY.NORMAL)) or
+		   	(savedVars_CDGShowLoot.filter.self.FINE and (quality == LOOTQUALITY.FINE)) or
+			(savedVars_CDGShowLoot.filter.self.SUPERIOR and (quality == LOOTQUALITY.SUPERIOR)) or
+			(savedVars_CDGShowLoot.filter.self.EPIC and (quality == LOOTQUALITY.EPIC)) or
+			(savedVars_CDGShowLoot.filter.self.LEGENDARY and (quality == LOOTQUALITY.LEGENDARY)) then 
 			--
 			-- nothing
 			--
@@ -237,12 +254,12 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 			List.push(Player.LootList, {who = GetUnitName("player"), qty = quantity, val = itemName})	
 		end
 	else	  
-		if 	(savedVars_CDGShowLoot.filter.group.JUNK and (color == LOOTCOLOR.JUNK)) or 
-		   	(savedVars_CDGShowLoot.filter.group.NORMAL and (color == LOOTCOLOR.NORMAL)) or
-		   	(savedVars_CDGShowLoot.filter.group.FINE and (color == LOOTCOLOR.FINE)) or
-			(savedVars_CDGShowLoot.filter.group.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
-			(savedVars_CDGShowLoot.filter.group.EPIC and (color == LOOTCOLOR.EPIC)) or
-			(savedVars_CDGShowLoot.filter.group.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+		if 	(savedVars_CDGShowLoot.filter.group.JUNK and (quality == LOOTQUALITY.JUNK)) or 
+		   	(savedVars_CDGShowLoot.filter.group.NORMAL and (quality == LOOTQUALITY.NORMAL)) or
+		   	(savedVars_CDGShowLoot.filter.group.FINE and (quality == LOOTQUALITY.FINE)) or
+			(savedVars_CDGShowLoot.filter.group.SUPERIOR and (quality == LOOTQUALITY.SUPERIOR)) or
+			(savedVars_CDGShowLoot.filter.group.EPIC and (quality == LOOTQUALITY.EPIC)) or
+			(savedVars_CDGShowLoot.filter.group.LEGENDARY and (quality == LOOTQUALITY.LEGENDARY)) then 
 			--
 			-- nothing
 			--
@@ -273,7 +290,7 @@ function CDGSL:CraftCompleted(...)
 	local items = GetNumLastCraftingResultItems()
 	local _, bagslots = GetBagInfo(BAG_BACKPACK)
 	for i=1, items do
-		local itemName, _, quantity, _, _, _, _, _, _, _, _ = GetLastCraftingResultItemInfo(i)
+		local itemName, _, quantity, _, _, _, _, _, quality, _, _ = GetLastCraftingResultItemInfo(i)
 		if itemName == nil then 
 			CDGSL:sendMessage("Failed to retrieve last crafting results") 
 		end
@@ -288,15 +305,13 @@ function CDGSL:CraftCompleted(...)
 		--
 		-- Some odd cases it can happen that the itemLink is nil, but why ...
 		--
-		if itemLink ~= nil then
-			local _, color, _ = ZO_LinkHandler_ParseLink (itemLink)
-			
-			if 	(savedVars_CDGShowLoot.filter.self.JUNK and (color == LOOTCOLOR.JUNK)) or 
-			   	(savedVars_CDGShowLoot.filter.self.NORMAL and (color == LOOTCOLOR.NORMAL)) or
-			   	(savedVars_CDGShowLoot.filter.self.FINE and (color == LOOTCOLOR.FINE)) or
-				(savedVars_CDGShowLoot.filter.self.SUPERIOR and (color == LOOTCOLOR.SUPERIOR)) or
-				(savedVars_CDGShowLoot.filter.self.EPIC and (color == LOOTCOLOR.EPIC)) or
-				(savedVars_CDGShowLoot.filter.self.LEGENDARY and (color == LOOTCOLOR.LEGENDARY)) then 
+		if itemLink ~= nil then						
+			if 	(savedVars_CDGShowLoot.filter.self.JUNK and (quality == LOOTQUALITY.JUNK)) or 
+			   	(savedVars_CDGShowLoot.filter.self.NORMAL and (quality == LOOTQUALITY.NORMAL)) or
+			   	(savedVars_CDGShowLoot.filter.self.FINE and (quality == LOOTQUALITY.FINE)) or
+				(savedVars_CDGShowLoot.filter.self.SUPERIOR and (quality == LOOTQUALITY.SUPERIOR)) or
+				(savedVars_CDGShowLoot.filter.self.EPIC and (quality == LOOTQUALITY.EPIC)) or
+				(savedVars_CDGShowLoot.filter.self.LEGENDARY and (quality == LOOTQUALITY.LEGENDARY)) then 
 			--
 			-- Do Nothing
 			--
