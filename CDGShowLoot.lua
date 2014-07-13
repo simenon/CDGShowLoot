@@ -52,6 +52,7 @@ local localVars = {
 		hidePlayerName = false,		
 		showBagStacks = true,
 		showGroupLoot = false,
+		showBankStacks = false,
 	}
 }
 
@@ -186,17 +187,42 @@ function CDGSL:LootClosed(...)
 					msg = msg .. zo_strformat("|c<<3>> <<2[1/$d]>> |r <<t:1>>", l.val, math.abs(l.qty), COLOR.RED, " "   ) 
 				end
 
-				if savedVars_CDGShowLoot.showBagStacks and l.val ~= "gold" and GetUnitName("player") == l.who then
-					local amount = 0
-					local _, bagSlots = GetBagInfo(BAG_BACKPACK)
-					for bagSlot = 0, bagSlots do
-						local bagItemLink = GetItemLink(BAG_BACKPACK, bagSlot, LINK_STYLE_DEFAULT)
-						local bagStack,bagMaxStack = GetSlotStackSize(BAG_BACKPACK, bagSlot)
-						if l.val == bagItemLink then
-							amount = amount + bagStack
+				if (savedVars_CDGShowLoot.showBagStacks or savedVars_CDGShowLoot.showBankStacks) and l.val ~= "gold" and GetUnitName("player") == l.who then
+					local bagAmount = 0
+					local bankAmount = 0
+
+					if savedVars_CDGShowLoot.showBagStacks then						
+						local _, bagSlots = GetBagInfo(BAG_BACKPACK)
+						for bagSlot = 0, bagSlots do
+							local bagItemLink = GetItemLink(BAG_BACKPACK, bagSlot)							
+							if l.val == bagItemLink then
+								local bagStack,_ = GetSlotStackSize(BAG_BACKPACK, bagSlot)
+								bagAmount = bagAmount + bagStack
+							end
 						end
 					end
-					msg = msg .. " |cC3C3C3["..amount.."]|r"
+	
+					if savedVars_CDGShowLoot.showBankStacks then						
+						local _, bankSlots = GetBagInfo(BAG_BANK)
+						for bankSlot = 0, bankSlots do 
+                			local bankItemLink = GetItemLink(BAG_BANK, bankSlot)                			
+                			if l.val == bankItemLink then 
+                				local bankStack, _ = GetSlotStackSize(BAG_BANK, bankSlot)                 			
+                	        	bankAmount = bankAmount + bankStack
+                			end
+        				end
+	
+        				--msg = msg .. " |c00CD00Total: |r" .. "[" .. " |c4DE699"..amount.."|r" .. " /" .. " |c4DE699"..banked.."|r" .." ]" --Waboku
+						
+					end
+
+					if savedVars_CDGShowLoot.showBagStacks and savedVars_CDGShowLoot.showBankStacks then
+						msg = msg .. " |cC3C3C3["..bagAmount.."/"..bankAmount.."]|r"
+					elseif savedVars_CDGShowLoot.showBagStacks then
+						msg = msg .. " |cC3C3C3["..bagAmount.."]|r"
+					elseif savedVars_CDGShowLoot.showBankStacks then
+						msg = msg .. " |cC3C3C3["..bankAmount.."]|r"
+					end
 				end
 
 				if not List.empty(Player.LootList) and l.who == l_peek.who then
@@ -332,7 +358,7 @@ function CDGSL:LookUpItemNameInBag(itemName)
 	for b=1, bagslots do
 		local bagItemName = GetItemName(BAG_BACKPACK, b) 
 		if (bagItemName == itemName) then 
-			return GetItemLink(BAG_BACKPACK, b, LINK_STYLE_DEFAULT) 	
+			return GetItemLink(BAG_BACKPACK, b) 	
 		end		
 	end
 end
@@ -472,6 +498,7 @@ local function createLAM2Panel()
         table.insert(optionsData, { type = "slider", name = "Minimal gold to display", tooltip = "Minimum amount of gold gain needed before displaying.", min = 0, max = 1000, step = 10, getFunc = function() return savedVars_CDGShowLoot.filter.minGold end, setFunc = function(value) savedVars_CDGShowLoot.filter.minGold = value end, })
     	table.insert(optionsData, { type = "checkbox", name = "Hide player name", tooltip = "Don't show your own personal name when displaying loot", getFunc = function() return savedVars_CDGShowLoot.hidePlayerName end, setFunc = function(value) savedVars_CDGShowLoot.hidePlayerName = value end, })
     	table.insert(optionsData, { type = "checkbox", name = "Show Bag Stacks", tooltip = "Show amount of items in your bag.", getFunc = function() return savedVars_CDGShowLoot.showBagStacks end, setFunc = function(value) savedVars_CDGShowLoot.showBagStacks = value end, })
+    	table.insert(optionsData, { type = "checkbox", name = "Show Bank Stacks", tooltip = "Show amount of items in your bank.", getFunc = function() return savedVars_CDGShowLoot.showBankStacks end, setFunc = function(value) savedVars_CDGShowLoot.showBankStacks = value end, })
         table.insert(optionsData, { type = "header",   name = "Personal Loot Filters", })
     	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.JUNK)).."Junk".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.JUNK end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.JUNK = value end, })
 		table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.NORMAL)).."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.NORMAL end,     setFunc = function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, })
