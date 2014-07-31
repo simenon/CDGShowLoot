@@ -7,7 +7,7 @@ local Addon =
     Name = "CDGShowLoot",
     NameSpaced = "CDG Show Loot",
     Author = "CrazyDutchGuy",
-    Version = "3.2",
+    Version = "3.3",
 }
 
 local Player = { 
@@ -192,8 +192,7 @@ function CDGSL:LootClosed(...)
 					local bankAmount = 0
 
 					if savedVars_CDGShowLoot.showBagStacks then						
-						local _, bagSlots = GetBagInfo(BAG_BACKPACK)
-						for bagSlot = 0, bagSlots do
+						for bagSlot = 0, GetBagSize(BAG_BACKPACK) do
 							local bagItemLink = GetItemLink(BAG_BACKPACK, bagSlot)							
 							if l.val == bagItemLink then
 								local bagStack,_ = GetSlotStackSize(BAG_BACKPACK, bagSlot)
@@ -203,17 +202,13 @@ function CDGSL:LootClosed(...)
 					end
 	
 					if savedVars_CDGShowLoot.showBankStacks then						
-						local _, bankSlots = GetBagInfo(BAG_BANK)
-						for bankSlot = 0, bankSlots do 
-                			local bankItemLink = GetItemLink(BAG_BANK, bankSlot)                			
-                			if l.val == bankItemLink then 
-                				local bankStack, _ = GetSlotStackSize(BAG_BANK, bankSlot)                 			
-                	        	bankAmount = bankAmount + bankStack
-                			end
-        				end
-	
-        				--msg = msg .. " |c00CD00Total: |r" .. "[" .. " |c4DE699"..amount.."|r" .. " /" .. " |c4DE699"..banked.."|r" .." ]" --Waboku
-						
+						for bankSlot = 0, GetBagSize(BAG_BANK) do 
+                					local bankItemLink = GetItemLink(BAG_BANK, bankSlot)                			
+		                			if l.val == bankItemLink then 
+                						local bankStack, _ = GetSlotStackSize(BAG_BANK, bankSlot)                 			
+                	        				bankAmount = bankAmount + bankStack
+		                			end
+        					end
 					end
 
 					if savedVars_CDGShowLoot.showBagStacks and savedVars_CDGShowLoot.showBankStacks then
@@ -261,7 +256,7 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 	local quality = nil
 			
 	if self then	
-		for bagslot = 0, select(2, GetBagInfo(BAG_BACKPACK)) do
+		for bagslot = 0, GetBagSize(BAG_BACKPACK) do
 			if itemName == GetItemLink(BAG_BACKPACK, bagslot) then
 				quality = select(8, GetItemInfo(BAG_BACKPACK, bagslot))
 				break
@@ -318,7 +313,6 @@ end
 function CDGSL:CraftCompleted(...)
 	Player.LastLootName, _, _ = GetLootTargetInfo()
 	local items = GetNumLastCraftingResultItems()
-	local _, bagslots = GetBagInfo(BAG_BACKPACK)
 	for i=1, items do
 		local itemName, _, quantity, _, _, _, _, _, quality, _, _ = GetLastCraftingResultItemInfo(i)
 		if itemName == nil then 
@@ -354,8 +348,7 @@ function CDGSL:CraftCompleted(...)
 end
 
 function CDGSL:LookUpItemNameInBag(itemName)
-	local _, bagslots = GetBagInfo(BAG_BACKPACK)
-	for b=1, bagslots do
+	for b=1, GetBagSize(BAG_BACKPACK) do
 		local bagItemName = GetItemName(BAG_BACKPACK, b) 
 		if (bagItemName == itemName) then 
 			return GetItemLink(BAG_BACKPACK, b) 	
