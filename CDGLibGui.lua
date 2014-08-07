@@ -64,7 +64,7 @@ function CDGLibGui.CreateWindow( )
 		end
 		CDGLibGui.window.ID:SetDrawLevel(DL_BELOW) -- Set the order where it is drawn, higher is more in background ???
 		CDGLibGui.window.ID:SetDrawLayer(DL_BACKGROUND)
-		CDGLibGui.window.ID:SetDrawTier(DT_MEDIUM)
+		CDGLibGui.window.ID:SetDrawTier(DT_LOW)
 		CDGLibGui.window.ID:SetAnchor(
 			savedVars_CDGlibGui.anchor.point, 
 			savedVars_CDGlibGui.anchor.relativeTo, 

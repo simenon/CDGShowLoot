@@ -1,7 +1,7 @@
 --LibMediaProvider-1.0 is inspired by and borrows from LibSharedMedia-3.0 for World of Warcraft by Elkano
 --LibSharedMedia-3.0 and LibMediaProvider-1.0 are under the LGPL-2.1 license
 
-local MAJOR, MINOR = "LibMediaProvider-1.0", 3 -- remember to increase manually on changes
+local MAJOR, MINOR = "LibMediaProvider-1.0", 6 -- remember to increase manually on changes
 local LMP = LibStub:NewLibrary(MAJOR, MINOR)
 if not LMP then return end
 
@@ -10,35 +10,36 @@ local tinsert = table.insert
 local tsort = table.sort
 local pairs = pairs
 
-LMP.DefaultMedia = {}
-LMP.MediaList = {}
-LMP.MediaTable = {}
-LMP.MediaType = {}
+LMP.DefaultMedia = LMP.DefaultMedia or {}
+LMP.MediaList = LMP.MediaList or {}
+LMP.MediaTable = LMP.MediaTable or {}
+if not LMP.MediaType then
+	LMP.MediaType = {
+		BACKGROUND = "background",	-- background textures
+		BORDER = "border",			-- border textures
+		FONT = "font",				-- fonts
+		STATUSBAR = "statusbar",	-- statusbar textures
+		SOUND = "sound",			-- sound files
+	}
+end
 local defaultMedia = LMP.DefaultMedia
 local mediaList = LMP.MediaList
 local mediaTable = LMP.MediaTable
-LMP.MediaType = {
-	BACKGROUND = "background",	-- background textures
-	BORDER = "border",			-- border textures
-	FONT = "font",				-- fonts
-	STATUSBAR = "statusbar",	-- statusbar textures
-	SOUND = "sound",			-- sound files
-}
 
 --DEFAULT UI MEDIA--
 -- BACKGROUND
-LMP.MediaTable.background = {}
+LMP.MediaTable.background = LMP.MediaTable.background or {}
 --commented out because it still leaves a white texture behind - addons can use alpha to hide the background
 --LMP.MediaTable.background["None"]				= ""
 LMP.MediaTable.background["ESO Black"]			= "EsoUI/Art/Miscellaneous/borderedinset_center.dds"
 LMP.MediaTable.background["ESO Chat"]			= "EsoUI/Art/chatwindow/chat_bg_center.dds"
 LMP.MediaTable.background["ESO Gray"]			= "EsoUI/Art/itemtooltip/simpleprogbarbg_center.dds"
-LMP.MediaTable.background["Solid"]				= "EsoUI/Art/miscellaneous/progressbar_genericfill_tall.dds"
+LMP.MediaTable.background["Solid"]				= ""
 --LMP.DefaultMedia.background = "None"
 LMP.DefaultMedia.background = "Solid"
 
 -- BORDER
-LMP.MediaTable.border = {}
+LMP.MediaTable.border = LMP.MediaTable.border or {}
 --commented out because it still leaves a white texture behind - addons can use alpha to hide the border
 --LMP.MediaTable.border["None"]					= ""
 LMP.MediaTable.border["ESO Gold"]				= "EsoUI/Art/Miscellaneous/borderedinsettransparent_edgefile.dds"
@@ -52,7 +53,7 @@ LMP.MediaTable.border["ESO Red Overlay"]		= "EsoUI/Art/uicombatoverlay/uicombato
 LMP.DefaultMedia.border = "ESO Gold"
 
 -- FONT
-LMP.MediaTable.font = {}
+LMP.MediaTable.font = LMP.MediaTable.font or {}
 LMP.MediaTable.font["ProseAntique"]				= "EsoUI/Common/Fonts/ProseAntiquePSMT.otf"
 LMP.MediaTable.font["Arial Narrow"]				= "EsoUI/Common/Fonts/arialn.ttf"
 LMP.MediaTable.font["Consolas"]					= "EsoUI/Common/Fonts/consola.ttf"
@@ -69,12 +70,13 @@ LMP.MediaTable.font["Univers 67"]				= "EsoUI/Common/Fonts/univers67.otf"
 LMP.DefaultMedia.font = "Arial Narrow"
 
 -- STATUSBAR
-LMP.MediaTable.statusbar = {}
-LMP.MediaTable.statusbar["ESO Basic"]			= "EsoUI/Art/miscellaneous/progressbar_genericfill_tall.dds"
+LMP.MediaTable.statusbar = LMP.MediaTable.statusbar or {}
+--LMP.MediaTable.statusbar["ESO Basic"]			= "EsoUI/Art/miscellaneous/progressbar_genericfill_tall.dds"
+LMP.MediaTable.statusbar["ESO Basic"]			= ""
 LMP.DefaultMedia.statusbar = "ESO Basic"
 
 -- SOUND
-LMP.MediaTable.sound = {}
+LMP.MediaTable.sound = LMP.MediaTable.sound or {}
 LMP.MediaTable.sound["None"]					= ""
 LMP.MediaTable.sound["AvA Gate Open"]			= SOUNDS.AVA_GATE_OPENED
 LMP.MediaTable.sound["AvA Gate Close"]			= SOUNDS.AVA_GATE_CLOSED

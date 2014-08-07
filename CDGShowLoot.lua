@@ -7,7 +7,7 @@ local Addon =
     Name = "CDGShowLoot",
     NameSpaced = "CDG Show Loot",
     Author = "CrazyDutchGuy",
-    Version = "3.3",
+    Version = "3.4",
 }
 
 local Player = { 
@@ -277,7 +277,7 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 		end
 
 	else	  
-		if savedVars_CDGShowLoot.showGroupLoot then
+		--if savedVars_CDGShowLoot.showGroupLoot then
 			if 	(savedVars_CDGShowLoot.filter.group.JUNK and (quality == LOOTQUALITY.JUNK)) or 
 			   	(savedVars_CDGShowLoot.filter.group.NORMAL and (quality == LOOTQUALITY.NORMAL)) or
 			   	(savedVars_CDGShowLoot.filter.group.FINE and (quality == LOOTQUALITY.FINE)) or
@@ -292,7 +292,7 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 					
 				CDGSL:SetDelayedLootUpdate()
 			end
-		end
+--		end
 	end
 end
 
@@ -494,20 +494,20 @@ local function createLAM2Panel()
     	table.insert(optionsData, { type = "checkbox", name = "Show Bank Stacks", tooltip = "Show amount of items in your bank.", getFunc = function() return savedVars_CDGShowLoot.showBankStacks end, setFunc = function(value) savedVars_CDGShowLoot.showBankStacks = value end, })
         table.insert(optionsData, { type = "header",   name = "Personal Loot Filters", })
     	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.JUNK)).."Junk".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.JUNK end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.JUNK = value end, })
-		table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.NORMAL)).."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.NORMAL end,     setFunc = function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, })
-		table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.FINE)).."Fine".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.FINE end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.FINE = value end, })
-		table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.SUPERIOR)).."Superior".."|r",  "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.SUPERIOR end,   setFunc = function(value) savedVars_CDGShowLoot.filter.self.SUPERIOR = value end, })
-		table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.EPIC)).."Epic".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.EPIC end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.EPIC = value end, })
-		table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.LEGENDARY)).."Legendary".."|r","", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.LEGENDARY end,  setFunc = function(value) savedVars_CDGShowLoot.filter.self.LEGENDARY = value end, })
-		table.insert(optionsData, { type = "header",   name = "Group Loot Filters", })
-		table.insert(optionsData, { type = "description", text = "The new patch made group loot filters not possible anymore.Group loot disabled till i have a solutiion. If you like spam you can enable the option below", })
-		table.insert(optionsData, { type = "checkbox", name = "Show Group Loot", tooltip = "Show ALL group loot", getFunc = function() return savedVars_CDGShowLoot.showGroupLoot end, setFunc = function(value) savedVars_CDGShowLoot.showGroupLoot = value end, })
-    	--table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.JUNK)).."Junk".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.JUNK end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.JUNK = value end, })
-		--table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.NORMAL)).."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.NORMAL end,    setFunc = function(value) savedVars_CDGShowLoot.filter.group.NORMAL = value end, })
-		--table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.FINE)).."Fine".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.FINE end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.FINE = value end, })
-		--table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.SUPERIOR)).."Superior".."|r",  "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.SUPERIOR end,  setFunc = function(value) savedVars_CDGShowLoot.filter.group.SUPERIOR = value end, })
-		--table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.EPIC)).."Epic".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.EPIC end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.EPIC = value end, })
-		--table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.LEGENDARY)).."Legendary".."|r","", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.LEGENDARY end, setFunc = function(value) savedVars_CDGShowLoot.filter.group.LEGENDARY = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.NORMAL)).."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.NORMAL end,     setFunc = function(value) savedVars_CDGShowLoot.filter.self.NORMAL = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.FINE)).."Fine".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.FINE end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.FINE = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.SUPERIOR)).."Superior".."|r",  "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.SUPERIOR end,   setFunc = function(value) savedVars_CDGShowLoot.filter.self.SUPERIOR = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.EPIC)).."Epic".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.EPIC end,       setFunc = function(value) savedVars_CDGShowLoot.filter.self.EPIC = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.LEGENDARY)).."Legendary".."|r","", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.self.LEGENDARY end,  setFunc = function(value) savedVars_CDGShowLoot.filter.self.LEGENDARY = value end, })
+	table.insert(optionsData, { type = "header",   name = "Group Loot Filters", })
+	--table.insert(optionsData, { type = "description", text = "The new patch made group loot filters not possible anymore.Group loot disabled till i have a solutiion. If you like spam you can enable the option below", })
+	--table.insert(optionsData, { type = "checkbox", name = "Show Group Loot", tooltip = "Show ALL group loot", getFunc = function() return savedVars_CDGShowLoot.showGroupLoot end, setFunc = function(value) savedVars_CDGShowLoot.nshowGroupLoot = value end, })
+    	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.JUNK)).."Junk".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.JUNK end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.JUNK = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.NORMAL)).."Normal".."|r",      "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.NORMAL end,    setFunc = function(value) savedVars_CDGShowLoot.filter.group.NORMAL = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.FINE)).."Fine".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.FINE end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.FINE = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.SUPERIOR)).."Superior".."|r",  "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.SUPERIOR end,  setFunc = function(value) savedVars_CDGShowLoot.filter.group.SUPERIOR = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.EPIC)).."Epic".."|r",          "", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.EPIC end,      setFunc = function(value) savedVars_CDGShowLoot.filter.group.EPIC = value end, })
+	table.insert(optionsData, { type = "checkbox", name = "|c"..QColortoHex(GetItemQualityColor(LOOTQUALITY.LEGENDARY)).."Legendary".."|r","", tooltip = "Do NOT show items of this quality.", getFunc = function() return savedVars_CDGShowLoot.filter.group.LEGENDARY end, setFunc = function(value) savedVars_CDGShowLoot.filter.group.LEGENDARY = value end, })
     	table.insert(optionsData, { type = "header", name = "Optional Loot Window", })
         table.insert(optionsData, { type = "checkbox", name = "Hide window", tooltip = "Hide the loot window.", getFunc = function() return CDGLibGui.isHidden() end, setFunc = function(value) CDGLibGui.setHidden(value) end, })
         table.insert(optionsData, { type = "checkbox", name = "Hide window when in dialog", tooltip = "Hide the loot window when dialog windows are open.", getFunc = function() return CDGLibGui.isHiddenInDialogs() end, setFunc = function(value) CDGLibGui.HideInDialogs(value) end, })
