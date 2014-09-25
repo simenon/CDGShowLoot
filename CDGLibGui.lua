@@ -97,8 +97,8 @@ function CDGLibGui.CreateWindow( )
 			CDGLibGui.FadeOut()
 		end
 
-		CDGLibGui.window.TEXTBUFFER:SetHandler("OnLinkClicked", function(self, ...) 
-			return ZO_ChatSystem_OnLinkClicked(...) 
+		CDGLibGui.window.TEXTBUFFER:SetHandler( "OnLinkMouseUp", function(self, _, link, button, ...)
+			return ZO_LinkHandler_OnLinkMouseUp(link, button, self) 
 		end) 
 	
 

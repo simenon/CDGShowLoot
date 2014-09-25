@@ -255,13 +255,15 @@ end
 function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 	local quality = nil
 			
+	quality = GetItemLinkQuality(itemName)
+
 	if self then	
-		for bagslot = 0, GetBagSize(BAG_BACKPACK) do
-			if itemName == GetItemLink(BAG_BACKPACK, bagslot) then
-				quality = select(8, GetItemInfo(BAG_BACKPACK, bagslot))
-				break
-			end				
-		end
+--		for bagslot = 0, GetBagSize(BAG_BACKPACK) do
+--			if itemName == GetItemLink(BAG_BACKPACK, bagslot) then
+--				quality = select(8, GetItemInfo(BAG_BACKPACK, bagslot))
+--				break
+--			end				
+--		end
 
 		if 	(savedVars_CDGShowLoot.filter.self.JUNK and (quality == LOOTQUALITY.JUNK)) or 
 		   	(savedVars_CDGShowLoot.filter.self.NORMAL and (quality == LOOTQUALITY.NORMAL)) or
@@ -276,7 +278,8 @@ function CDGSL:LootReceived(_, lootedBy, itemName, quantity, _, lootType, self)
 			List.push(Player.LootList, {who = GetUnitName("player"), qty = quantity, val = itemName})	
 		end
 
-	else	  
+	else	 
+ 
 		--if savedVars_CDGShowLoot.showGroupLoot then
 			if 	(savedVars_CDGShowLoot.filter.group.JUNK and (quality == LOOTQUALITY.JUNK)) or 
 			   	(savedVars_CDGShowLoot.filter.group.NORMAL and (quality == LOOTQUALITY.NORMAL)) or
@@ -312,7 +315,7 @@ end
 
 function CDGSL:CraftCompleted(...)
 	Player.LastLootName, _, _ = GetLootTargetInfo()
-	local items = GetNumLastCraftingResultItems()
+	local items = GetNumLastCraftingResultItemsAndPenalty()
 	for i=1, items do
 		local itemName, _, quantity, _, _, _, _, _, quality, _, _ = GetLastCraftingResultItemInfo(i)
 		if itemName == nil then 
