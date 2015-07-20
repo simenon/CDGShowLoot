@@ -7,7 +7,7 @@ local Addon =
     Name = "CDGShowLoot",
     NameSpaced = "CDG Show Loot",
     Author = "CrazyDutchGuy",
-    Version = "3.5",
+    Version = "3.6",
 }
 
 local Player = { 
