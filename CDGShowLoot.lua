@@ -7,7 +7,7 @@ local Addon =
     Name = "CDGShowLoot",
     NameSpaced = "CDG Show Loot",
     Author = "CrazyDutchGuy",
-    Version = "3.6",
+    Version = "4.0",
 }
 
 local Player = { 
@@ -472,14 +472,14 @@ local function createLAM2Panel()
     {
         type = "panel",
         name = Addon.NameSpaced,
-        displayName = "|cFFFFB0" .. Addon.NameSpaced .. "|r",
-        author = Addon.Author,
+        displayName = ZO_HIGHLIGHT_TEXT:Colorize(Addon.NameSpaced),
+        author = "|cFFA500"..Addon.Author.."|r",
         version = Addon.Version,        
     }
 
     local optionsData = {}
     --{        
-        table.insert(optionsData, { type = "description", text = "|cFF2222CrazyDutchGuy's|r Show Loot is an addon that displays items looted in a optional loot window or a default chat window of your choice.", })
+        table.insert(optionsData, { type = "description", text = "Show Loot is an addon that displays items looted in a optional loot window or a default chat window of your choice.", })
         table.insert(optionsData, { type = "header", name = "General Options", })
         table.insert(optionsData, { type = "checkbox", name = "Log to eso chat window", tooltip = "Log to eso chat window", getFunc = function() return savedVars_CDGShowLoot.logToDefaultChat end, setFunc = function(value) savedVars_CDGShowLoot.logToDefaultChat = value end, })
         table.insert(optionsData, { type = "dropdown", name = "Chat Window", tooltip = "Chat window", choices = getChatWindows(), getFunc = function() return getChatWindow() end, setFunc = function(value) setChatWindow(value) end, })
@@ -551,6 +551,4 @@ function CDGSL:EVENT_ADD_ON_LOADED(eventCode, addOnName, ...)
     end
 end
 
-function CDGSL_OnInitialized()
-	EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:EVENT_ADD_ON_LOADED(...) end )	
-end
+EVENT_MANAGER:RegisterForEvent("CDGShowLoot", EVENT_ADD_ON_LOADED, function(...) CDGSL:EVENT_ADD_ON_LOADED(...) end )	
